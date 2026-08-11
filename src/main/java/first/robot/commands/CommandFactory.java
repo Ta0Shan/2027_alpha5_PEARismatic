@@ -57,7 +57,7 @@ public class CommandFactory {
             co.fork(instantApplyState(SuperstructureStates.LAUNCHER));
             co.awaitAll(
                 telescope.setPivotAngleDeg(20),
-                launcher.setLauncherRPS(100)
+                launcher.setLauncherRPS(60)
             );
             co.await(pause(1));
         }).named("SHUTTLE");

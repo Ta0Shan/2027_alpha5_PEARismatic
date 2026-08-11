@@ -60,7 +60,7 @@ public class Robot extends TimedRobot {
             problemCommands.add(0, message);
           }
           break;
-          // cancellations not rly that important lol
+          // cancellations not rly that important but if necessary we can add
           // case Canceled(Command cmd, long time):
           //   message = ((double)Math.round(time / 1000.0) / 1000.0) + " | " + cmd.name() + " canceled";
           //   if(!cmd.name().contains("[IDLE]") && !problemCommands.contains(message)) {

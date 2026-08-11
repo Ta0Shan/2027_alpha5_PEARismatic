@@ -14,6 +14,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import first.robot.Constants;
+import first.robot.subsystems.endEffector.EEConstants;
+import first.robot.subsystems.launcher.LauncherConstants;
 
 /** Add your docs here. */
 public class TelescopeConstants {
@@ -21,17 +23,17 @@ public class TelescopeConstants {
     public static final CANBus CAN_BUS = Constants.CAN_BUS;
 
     public static enum TelescopeStates {
-        HOME(0.0, 0.0), // 0 deg
-        DOWN(0.0, 0.0), // 0 deg
-        L1_FRONT(35.0, 0.0), // 35 deg
-        L2_FRONT(35.0, 25.0), // 50 deg
-        L1_BACK(147.0, 0.0), // 127.5 deg
-        L2_BACK(147.0, 24.0), // 127.5 deg
-        CLASSIFIER_FRONT(36.0, 0.0),
-        CLASSIFIER_BACK(87.5, 0.0),
-        CLIMB_RAISED(90.0, 7.0), // 90 deg
-        CLUMB(90.0, -10), // 90 deg, weird number because gearing's swapped atp
-        LAUNCHER(0.0, 0.0); // variable
+        HOME(PivotConstants.STARTING_ANGLE_DEG, 0.), // 0 deg
+        DOWN(0., 0.), // 0 deg
+        L1_FRONT(35., 0.), // 35 deg
+        L2_FRONT(35., 25.), // 50 deg
+        L1_BACK(147., 0.), // 127.5 deg
+        L2_BACK(147., 24.), // 127.5 deg
+        CLASSIFIER_FRONT(36., 0.),
+        CLASSIFIER_BACK(87.5, 0.),
+        CLIMB_RAISED(90., 7.), // 90 deg
+        CLUMB(90., -10.), // 90 deg, weird number because gearing's swapped atp
+        LAUNCHER(0., 0.); // variable
 
         private final double pivotAngleDeg;
         private final double armExtensionInches;
@@ -51,7 +53,7 @@ public class TelescopeConstants {
         public static final int PIVOT_2_ID = 22;
         public static final int PIVOT_3_ID = 23;
 
-        public static final double REDUCTION = (48.0/12.0) * (48.0/16.0) * (50.0/12.0) * (52.0/20.0);
+        public static final double REDUCTION = (48./12.) * (48./16.) * (50./12.) * (52./20.);
         
         public static final TalonFXConfiguration PIVOT_CONFIG() {
             TalonFXConfiguration config = new TalonFXConfiguration();
@@ -75,11 +77,10 @@ public class TelescopeConstants {
 
             return config;
         }
-        // arm is HORIZONTAL to ground and will rotate COUNTERCLOCKWISE
-        public static final double STARTING_ANGLE_DEG = 0.0;
+        public static final double STARTING_ANGLE_DEG = 60.0;
         
         public static final int CANCODER_ID = 24;
-        public static final double CANCODER_OFFSET = 0.0 - Units.degreesToRotations(STARTING_ANGLE_DEG);
+        public static final double CANCODER_OFFSET = 0.0;
 
         public static final CANcoderConfiguration CANCODER_CONFIG() {
             CANcoderConfiguration config = new CANcoderConfiguration();
@@ -96,11 +97,11 @@ public class TelescopeConstants {
         public static final int ARM_1_ID = 31;
         public static final int ARM_2_ID = 32;
         
-        public static final double EXTENSION_REDUCTION = (48.0/26.0) * (48.0/12.0) * (30.0/28.0) * (50.0/80.0) * (40.0/50.0);
-        public static final double EXTENSION_ROTOR_CIRCUMF_INCHES = Math.PI * (26.0 / 20.0);
+        public static final double EXTENSION_REDUCTION = (48./26.) * (48./12.) * (30./28.) * (50./80.) * (40./50.);
+        public static final double EXTENSION_ROTOR_CIRCUMF_METERS = Units.inchesToMeters(Math.PI * (26./20.));
         
-        public static final double CLIMB_REDUCTION = (50.0/80.0) * (40.0/50.0) * (40.0/16.0) * (48.0/12.0) * (30.0/28.0) * (50.0/20.0);
-        public static final double CLIMB_ROTOR_CIRCUMF_INCHES = Math.PI * (26.0 / 20.0);
+        public static final double CLIMB_REDUCTION = (50./80.) * (40./50.) * (40./16.) * (48./12.) * (30./28.) * (50./20.);
+        public static final double CLIMB_ROTOR_CIRCUMF_INCHES = Math.PI * (26./20.);
         
         public static final TalonFXConfiguration CONFIG() {
             TalonFXConfiguration config = new TalonFXConfiguration();
@@ -125,12 +126,22 @@ public class TelescopeConstants {
             return config;
         }
 
-        
         public static final double MIN_LENGTH_METERS = Units.inchesToMeters(28.566252);
         public static final double MAX_EXTENSION_METERS = Units.inchesToMeters(25);
         public static final double MAX_LENGTH_METERS = MIN_LENGTH_METERS + MAX_EXTENSION_METERS;
 
-        public static final double MASS_KG = Units.lbsToKilograms(9.7439771);
+        public static final double MASS_KG = Units.lbsToKilograms(10.5082601) + LauncherConstants.MASS_KG;
+
+        public static final double STATIC_STAGE_LENGTH_METERS = Units.inchesToMeters(26.066252);
+        public static final double CARRIAGE_LENGTH_METERS = Units.inchesToMeters(31.312500);
+        public static final double CARRIAGE_MASS_KG = Units.lbsToKilograms(1.8563182);
+        public static final double STATIC_STAGE_MASS_KG = MASS_KG - CARRIAGE_MASS_KG;
+
+        public static final double CARRIAGE_DRUM_RADIUS_METERS = Units.inchesToMeters(0.16 / 2.);
+
+
+        public static final double STATIC_STAGE_MOI = (1./3.) * STATIC_STAGE_MASS_KG * Math.pow(STATIC_STAGE_LENGTH_METERS/2, 2);
+        public static final double CARRIAGE_INIT_MOI = (1./3.) * CARRIAGE_MASS_KG * Math.pow(CARRIAGE_LENGTH_METERS/2, 2);
 
     }
 

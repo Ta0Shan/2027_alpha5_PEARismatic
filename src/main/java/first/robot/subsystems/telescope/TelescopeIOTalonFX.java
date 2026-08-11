@@ -99,13 +99,13 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
     }
 
     public void setArmExtension(boolean isClimbing, double extensionInches) {
-        double motorSetpoint = extensionInches * ArmConstants.EXTENSION_ROTOR_CIRCUMF_INCHES
+        double motorSetpoint = Units.inchesToMeters(extensionInches) * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS
                 * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION);
         arm1.setControl(armMMDutyCycle.withPosition(motorSetpoint));
     }
 
     public void setArmExtension(boolean isClimbing, double extensionInches, DoubleSupplier ff) {
-        double motorSetpoint = extensionInches * ArmConstants.EXTENSION_ROTOR_CIRCUMF_INCHES
+        double motorSetpoint = Units.inchesToMeters(extensionInches) * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS
                  * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION);
             arm1.setControl(armMMDutyCycle.withPosition(motorSetpoint).withFeedForward(ff.getAsDouble()));
     }

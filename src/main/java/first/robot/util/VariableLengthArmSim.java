@@ -135,7 +135,7 @@ public class VariableLengthArmSim extends LinearSystemSim<N2, N1, N2> {
      * @return Whether the arm has hit the lower limit.
      */
     public boolean hasHitLowerLimit() {
-        return wouldHitLowerLimit(getAngleRads());
+        return wouldHitLowerLimit(getAngle());
     }
 
     /**
@@ -144,7 +144,7 @@ public class VariableLengthArmSim extends LinearSystemSim<N2, N1, N2> {
      * @return Whether the arm has hit the upper limit.
      */
     public boolean hasHitUpperLimit() {
-        return wouldHitUpperLimit(getAngleRads());
+        return wouldHitUpperLimit(getAngle());
     }
 
     /**
@@ -152,7 +152,7 @@ public class VariableLengthArmSim extends LinearSystemSim<N2, N1, N2> {
      *
      * @return The current arm angle.
      */
-    public double getAngleRads() {
+    public double getAngle() {
         return m_y.get(0, 0);
     }
 
@@ -161,7 +161,7 @@ public class VariableLengthArmSim extends LinearSystemSim<N2, N1, N2> {
      *
      * @return The current arm velocity.
      */
-    public double getVelocityRadPerSec() {
+    public double getVelocity() {
         return m_x.get(1, 0);
     }
 

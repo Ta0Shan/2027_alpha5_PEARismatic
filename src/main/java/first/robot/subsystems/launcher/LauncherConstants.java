@@ -47,4 +47,6 @@ public class LauncherConstants {
 
     public static final double MOTOR_MAX_SPEED_RPS = 95;
     public static final double FLYWHEEL_MAX_SPEED_RPS = MOTOR_MAX_SPEED_RPS/REDUCTION;
+
+    public static final double MASS_KG = Units.lbsToKilograms(12.2648713);
 }

@@ -8,8 +8,10 @@ import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import first.robot.Constants;
+import first.robot.subsystems.endEffector.EEConstants;
 import first.robot.subsystems.telescope.TelescopeConstants.ArmConstants;
 import first.robot.subsystems.telescope.TelescopeConstants.PivotConstants;
+import first.robot.util.TiltedElevatorSim;
 import first.robot.util.VariableLengthArmSim;
 
 public class TelescopeIOSim extends TelescopeIOTalonFX {
@@ -18,22 +20,28 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
     private final TalonFXSimState pivot3SimState;
     private final CANcoderSimState absoluteEncoderSimState;
     private final TalonFXSimState arm1SimState;
+    private final TalonFXSimState arm2SimState;
 
-    private final SingleJointedArmSim pivotPhysicsSim = new SingleJointedArmSim(
-        DCMotor.getKrakenX44Foc(3),
+    private final VariableLengthArmSim pivotPhysicsSim = new VariableLengthArmSim(
+        DCMotor.getKrakenX60Foc(3), 
         PivotConstants.REDUCTION,
-        SingleJointedArmSim.estimateMOI(ArmConstants.MIN_LENGTH_METERS, ArmConstants.MASS_KG),
-        ArmConstants.MIN_LENGTH_METERS,
-        Double.NEGATIVE_INFINITY,
+        estimateMOI(0),
+        ArmConstants.CARRIAGE_LENGTH_METERS,
+        0,
         Double.POSITIVE_INFINITY,
-        false,
-        Units.degreesToRadians(PivotConstants.STARTING_ANGLE_DEG)
+        ArmConstants.MASS_KG,
+        false
     );
 
-    // private final VariableLengthArmSim psim = new VariableLengthArmSim(
-    //     DCMotor.getKrakenX60Foc(3), 
-    //     PivotConstants.REDUCTION, 0, 0, 0, 0, 0, false
-    // );
+    private final TiltedElevatorSim armPhysicsSim = new TiltedElevatorSim(
+        DCMotor.getKrakenX60Foc(2),
+        ArmConstants.EXTENSION_REDUCTION,
+        ArmConstants.CARRIAGE_MASS_KG,
+        ArmConstants.CARRIAGE_DRUM_RADIUS_METERS,
+        ArmConstants.MIN_LENGTH_METERS,
+        ArmConstants.MAX_LENGTH_METERS,
+        false
+    );
 
     public TelescopeIOSim() {
         super();
@@ -41,7 +49,9 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         pivot2SimState = pivot2.getSimState();
         pivot3SimState = pivot3.getSimState();
         absoluteEncoderSimState = absoluteEncoder.getSimState();
+
         arm1SimState = arm1.getSimState();
+        arm2SimState = arm2.getSimState();
     }
 
     @Override
@@ -53,7 +63,12 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         pivot3SimState.setSupplyVoltage(12);
         pivotPhysicsSim.setInputVoltage((pivot1SimState.getMotorVoltage() + pivot2SimState.getMotorVoltage() + pivot3SimState.getMotorVoltage()) / 3);
 
+        arm1SimState.setSupplyVoltage(12);
+        arm2SimState.setSupplyVoltage(12);
+        armPhysicsSim.setInputVoltage((arm1SimState.getMotorVoltage() + arm2SimState.getMotorVoltage()) / 2);
+
         pivotPhysicsSim.update(Constants.UPDATE_FREQ_SEC);
+        armPhysicsSim.update(Constants.UPDATE_FREQ_SEC);
 
         pivot1SimState.setRawRotorPosition(Units.radiansToRotations(pivotPhysicsSim.getAngle()) * PivotConstants.REDUCTION);
         pivot2SimState.setRawRotorPosition(Units.radiansToRotations(pivotPhysicsSim.getAngle()) * PivotConstants.REDUCTION);
@@ -62,5 +77,29 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         pivot2SimState.setRotorVelocity(Units.radiansToRotations(pivotPhysicsSim.getVelocity()) * PivotConstants.REDUCTION);
         pivot3SimState.setRotorVelocity(Units.radiansToRotations(pivotPhysicsSim.getVelocity()) * PivotConstants.REDUCTION);
         absoluteEncoderSimState.setRawPosition(Units.radiansToRotations(pivotPhysicsSim.getAngle()));
+
+        arm1SimState.setRawRotorPosition(armPhysicsSim.getPositionMeters() * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS * ArmConstants.EXTENSION_REDUCTION);
+        arm2SimState.setRawRotorPosition(armPhysicsSim.getPositionMeters() * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS * ArmConstants.EXTENSION_REDUCTION);
+        arm1SimState.setRotorVelocity(armPhysicsSim.getVelocityMetersPerSecond() * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS * ArmConstants.EXTENSION_REDUCTION);
+        arm2SimState.setRotorVelocity(armPhysicsSim.getVelocityMetersPerSecond() * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS * ArmConstants.EXTENSION_REDUCTION);
+    }
+
+    private double estimateCGRadius(double extensionLength) {
+        // CG = sum(md)/sum(m)
+        return ((ArmConstants.STATIC_STAGE_MASS_KG * (ArmConstants.STATIC_STAGE_LENGTH_METERS/2))
+                + (ArmConstants.CARRIAGE_MASS_KG * (extensionLength + ArmConstants.CARRIAGE_LENGTH_METERS/2))
+                + (EEConstants.MASS_KG * (extensionLength + ArmConstants.CARRIAGE_LENGTH_METERS)))
+                / (ArmConstants.MASS_KG + EEConstants.MASS_KG);
+    }
+
+    private double estimateMOI(double extensionLength) {
+        // parallel axis theorem: I_cm + Md^2
+        double carriageMOI = ArmConstants.CARRIAGE_INIT_MOI + 
+                ArmConstants.CARRIAGE_MASS_KG * Math.pow(extensionLength + (ArmConstants.CARRIAGE_LENGTH_METERS/2), 2);
+        
+        // effectively a point mass: mr^2
+        double wristMOI = EEConstants.MASS_KG * Math.pow(extensionLength + ArmConstants.CARRIAGE_LENGTH_METERS, 2);
+
+        return ArmConstants.STATIC_STAGE_MOI + carriageMOI + wristMOI;
     }
 }

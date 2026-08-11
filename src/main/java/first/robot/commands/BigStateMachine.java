@@ -91,7 +91,7 @@ public class BigStateMachine {
             stateMachine.switchFromAny().to(HOME).when(homeTrigger);
 
             // HOME, INTAKE, and OUTTAKE can freely switch to each other
-            stateMachine.switchFromAny(HOME, OUTTAKING, IDLING).to(INTAKING).when(intakeTrigger);
+            stateMachine.switchFromAny(HOME, OUTTAKING).to(INTAKING).when(intakeTrigger);
             stateMachine.switchFromAny(HOME, INTAKING, IDLING).to(OUTTAKING).when(outtakeTrigger);
             INTAKING.switchTo(HOME).when(intakeTrigger.negate());
             OUTTAKING.switchTo(HOME).when(outtakeTrigger.negate());
