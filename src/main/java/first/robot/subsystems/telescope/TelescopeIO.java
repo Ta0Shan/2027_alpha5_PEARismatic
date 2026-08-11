@@ -18,9 +18,6 @@ public interface TelescopeIO {
 
         public MotorData arm1Data;
         public MotorData arm2Data;
-
-        public MotorData wristData;
-        public MotorData rollersData;
     }
 
     public default void updateInputs(TelescopeIOInputs inputs) {}
@@ -32,11 +29,4 @@ public interface TelescopeIO {
     public default void setArmExtension(boolean isClimbing, double extensionInches) {}
 
     public default void setArmExtension(boolean isClimbing, double extensionInches, DoubleSupplier ff) {}
-
-    public default void setWristAngle(double angleDeg) {}
-
-    public default void setWristAngle(double angleDeg, DoubleSupplier ff) {}
-
-    public default void setRollerVolts(double volts) {}
-
 }

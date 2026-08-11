@@ -45,5 +45,6 @@ public class LauncherConstants {
 
     public static final double FLYWHEEL_CIRCUMF_METERS = Units.inchesToMeters(Math.PI * 4.0);
 
-    public static final double MOTOR_MAX_SPEED_RPS = 110;
+    public static final double MOTOR_MAX_SPEED_RPS = 95;
+    public static final double FLYWHEEL_MAX_SPEED_RPS = MOTOR_MAX_SPEED_RPS/REDUCTION;
 }

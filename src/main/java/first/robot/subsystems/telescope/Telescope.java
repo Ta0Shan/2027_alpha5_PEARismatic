@@ -12,11 +12,8 @@ import org.wpilib.math.util.Units;
 import org.wpilib.smartdashboard.SmartDashboard;
 
 import first.robot.subsystems.telescope.TelescopeConstants.ArmConstants;
-import first.robot.subsystems.telescope.TelescopeConstants.EEConstants;
 import first.robot.subsystems.telescope.TelescopeConstants.PivotConstants;
-import first.robot.subsystems.telescope.TelescopeConstants.RollerStates;
 import first.robot.subsystems.telescope.TelescopeConstants.TelescopeStates;
-import first.robot.subsystems.telescope.TelescopeConstants.WristStates;
 
 public class Telescope extends Mechanism {
 
@@ -26,9 +23,6 @@ public class Telescope extends Mechanism {
 
     private TelescopeStates telescopeState = TelescopeStates.HOME;
     private double launchingSetpoint = 0.0;
-
-    private WristStates wristState = WristStates.STOWED;
-    private RollerStates rollerState = RollerStates.IDLE;
 
     /** Creates a new Telescope. */
     public Telescope(TelescopeIO io) {
@@ -47,30 +41,13 @@ public class Telescope extends Mechanism {
         // TODO: see when logger starts working
     }
 
-    public Command applyState(TelescopeStates telescopeState, WristStates wristState, RollerStates rollerState) {
-        return run(co -> {
-            this.telescopeState = telescopeState;
-            this.wristState = wristState;
-            this.rollerState = rollerState;
-            while(Math.abs((telescopeState.getPivotAngleDeg() - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / telescopeState.getPivotAngleDeg()) > 0.05
-                    && Math.abs((telescopeState.getArmExtensionInches() - getArmExtensionInches()) / telescopeState.getArmExtensionInches()) > 0.05
-                    && Math.abs((wristState.getAngleDeg() - (Units.rotationsToDegrees(inputs.wristData.position()) / EEConstants.WRIST_REDUCTION))) / wristState.getAngleDeg() > 0.05) {
-                io.setPivotAngle(telescopeState.getPivotAngleDeg());
-                io.setArmExtension(telescopeState == TelescopeStates.CLUMB, telescopeState.getArmExtensionInches());
-                io.setWristAngle(wristState.getAngleDeg());
-                io.setRollerVolts(rollerState.getVoltage());
-                co.yield();
-            }
-        }).named(String.format("TELE %s | EE %s %s", telescopeState.name(), wristState.name(), rollerState.name()));
-    }
-
     public Command applyState(TelescopeStates state) {
         return run(co -> {
             telescopeState = state;
             if (telescopeState != TelescopeStates.LAUNCHER) { 
                 // to prevent conflicts when we need to schedule a launcher cmd bc that's a specific case
-                while((state.getPivotAngleDeg() - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / state.getPivotAngleDeg() > 0.05 
-                        && (state.getArmExtensionInches() - getArmExtensionInches()) / state.getArmExtensionInches() > 0.05) {
+                while(Math.abs((state.getPivotAngleDeg() - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / state.getPivotAngleDeg()) > 0.05){ 
+                        // && Math.abs((state.getArmExtensionInches() - getArmExtensionInches()) / state.getArmExtensionInches()) > 0.05) {
                     // functions as a timer, cmd gives up control when it's close to its setpoint
                     io.setPivotAngle(state.getPivotAngleDeg());
                     io.setArmExtension(state==TelescopeStates.CLUMB, state.getArmExtensionInches());
@@ -88,7 +65,6 @@ public class Telescope extends Mechanism {
         if (telescopeState != TelescopeStates.LAUNCHER) return Command.noRequirements(co -> {}).named("NOT LAUNCHING");
             return run(co -> {
             launchingSetpoint = angleDeg;
-            // TODO: work sim
             while((launchingSetpoint - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / launchingSetpoint > 0.05) {
                 // functions as a timer, cmd gives up control when it's close to its setpoint
                 io.setPivotAngle(launchingSetpoint);

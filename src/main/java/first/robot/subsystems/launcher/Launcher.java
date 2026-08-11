@@ -1,5 +1,7 @@
 package first.robot.subsystems.launcher;
 
+import java.util.function.DoubleSupplier;
+
 import org.wpilib.command3.Command;
 import org.wpilib.command3.Mechanism;
 import org.wpilib.smartdashboard.SmartDashboard;
@@ -8,7 +10,8 @@ public class Launcher extends Mechanism {
     private final LauncherIO io;
 
     private double meanRPSTarget = 0.0;
-    private double minimumRPSError = 0.0;
+
+    private double minimumErrorPercent = 0.0;
 
     private final LauncherIOInputsAutoLogged inputs = new LauncherIOInputsAutoLogged();
 
@@ -35,24 +38,24 @@ public class Launcher extends Mechanism {
 
         SmartDashboard.putNumber("Mechanisms/Launcher/Error/Raw RPS", meanRPSTarget - getMeanRPS());
         SmartDashboard.putNumber("Mechanisms/Launcher/Error/Percent", Math.abs(meanRPSTarget != 0 ? (meanRPSTarget - getMeanRPS()) / meanRPSTarget : 0) * 100);
-        SmartDashboard.putNumber("Mechanisms/Launcher/Error/Minimum", minimumRPSError);
+        SmartDashboard.putNumber("Mechanisms/Launcher/Error/Minimum Percent", minimumErrorPercent);
     }    
 
     public Command setLauncherRPS(double RPS) {
         return run(co -> {
-            meanRPSTarget = Math.signum(RPS) * Math.min(Math.abs(RPS/LauncherConstants.REDUCTION), LauncherConstants.MOTOR_MAX_SPEED_RPS - (LauncherConstants.RPS_DIFFERENCE/2)) * LauncherConstants.REDUCTION;
+            meanRPSTarget = (Math.abs(RPS) < LauncherConstants.FLYWHEEL_MAX_SPEED_RPS ? RPS : LauncherConstants.FLYWHEEL_MAX_SPEED_RPS);
             io.setLauncherRPS(meanRPSTarget);
-            minimumRPSError = Math.abs(meanRPSTarget != 0 ? (meanRPSTarget - getMeanRPS()) / meanRPSTarget : 0) * 100;
-            while(minimumRPSError > 1) {
+            minimumErrorPercent = Math.abs(meanRPSTarget != 0 ? (meanRPSTarget - getMeanRPS()) / meanRPSTarget : 0) * 100;
+            while(minimumErrorPercent > 1) {
                 // functions as a timer, cmd gives up control when it's close to its setpoint
-                if ((meanRPSTarget - getMeanRPS()) / meanRPSTarget < minimumRPSError) {minimumRPSError = Math.abs((meanRPSTarget - getMeanRPS()) / meanRPSTarget) * 100;}
+                if ((meanRPSTarget - getMeanRPS()) / meanRPSTarget < minimumErrorPercent) {minimumErrorPercent = Math.abs((meanRPSTarget - getMeanRPS()) / meanRPSTarget) * 100;}
                 co.yield();
             }
-        }).named("LAUNCHER RPS " + Math.signum(RPS) * Math.min(Math.abs(RPS/LauncherConstants.REDUCTION), LauncherConstants.MOTOR_MAX_SPEED_RPS - (LauncherConstants.RPS_DIFFERENCE/2)) * LauncherConstants.REDUCTION);
+        }).named("LAUNCHER RPS " + (Math.abs(RPS) < LauncherConstants.FLYWHEEL_MAX_SPEED_RPS ? RPS : LauncherConstants.FLYWHEEL_MAX_SPEED_RPS));
     }
 
     public double getMeanRPS() {
-        return mean(inputs.launcher1Data.velocity(), inputs.launcher2Data.velocity()) / LauncherConstants.REDUCTION;
+        return ((inputs.launcher1Data.velocity() + inputs.launcher2Data.velocity()) / 2) / LauncherConstants.REDUCTION;
     }
 
     private double mean(double... values) {
@@ -60,7 +63,7 @@ public class Launcher extends Mechanism {
         for (double value : values) {
             sum += value;
         }
-        return (sum / (double)values.length);
+        return (sum / values.length);
   }
 
 }

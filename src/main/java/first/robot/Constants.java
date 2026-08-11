@@ -1,7 +1,5 @@
 package first.robot;
 
-import org.wpilib.command3.Mechanism;
-
 import com.ctre.phoenix6.CANBus;
 
 import first.robot.subsystems.endEffector.EEConstants.RollerStates;
@@ -21,7 +19,8 @@ public class Constants {
         L1_BACK(TelescopeStates.L1_BACK, WristStates.L1_BACK),
         L2_FRONT(TelescopeStates.L2_FRONT, WristStates.L2_FRONT),
         L2_BACK(TelescopeStates.L2_BACK, WristStates.L2_BACK),
-        TELE_CLASSIFIER(TelescopeStates.CLASSIFIER, WristStates.CLASSIFIER),
+        CLASSIFIER_FRONT(TelescopeStates.CLASSIFIER_FRONT, WristStates.CLASSIFIER_FRONT),
+        CLASSIFIER_BACK(TelescopeStates.CLASSIFIER_BACK, WristStates.CLASSIFIER_BACK),
         LAUNCHER(TelescopeStates.LAUNCHER, WristStates.STOWED),
         CLIMB_RAISED(TelescopeStates.CLIMB_RAISED, WristStates.STOWED),
         CLUMB(TelescopeStates.CLUMB, WristStates.STOWED);

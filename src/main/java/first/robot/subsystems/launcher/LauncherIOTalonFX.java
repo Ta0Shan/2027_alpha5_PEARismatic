@@ -39,17 +39,9 @@ public abstract class LauncherIOTalonFX implements LauncherIO {
             double motorSetpoint = rps * LauncherConstants.REDUCTION;
 
             // induce spin for stable shot
-            launcher1.setControl(velocityVoltage.withVelocity(
-                Math.clamp(motorSetpoint + (LauncherConstants.RPS_DIFFERENCE / 2),
-                    -LauncherConstants.MOTOR_MAX_SPEED_RPS,
-                    LauncherConstants.MOTOR_MAX_SPEED_RPS)
-                ));
+            launcher1.setControl(velocityVoltage.withVelocity(motorSetpoint + (LauncherConstants.RPS_DIFFERENCE / 2)));
 
-            launcher2.setControl(velocityVoltage.withVelocity(
-                Math.clamp(motorSetpoint - (LauncherConstants.RPS_DIFFERENCE / 2),
-                    -LauncherConstants.MOTOR_MAX_SPEED_RPS,
-                    LauncherConstants.MOTOR_MAX_SPEED_RPS)
-                ));
+            launcher2.setControl(velocityVoltage.withVelocity(motorSetpoint - (LauncherConstants.RPS_DIFFERENCE / 2)));
         }
     }
 }

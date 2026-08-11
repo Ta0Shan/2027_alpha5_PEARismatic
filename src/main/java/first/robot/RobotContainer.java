@@ -56,12 +56,13 @@ public class RobotContainer {
       statemachine = new BigStateMachine(
         commandFactory,
         driver.start(), // start
-        driver.a(), // left bumper
+        driver.a(), // TODO: left bumper
         driver.leftTrigger(0.9), // left trigger
         driver.x(), // x
         driver.y(), // y
+        driver.povRight(), // TODO: a
         driver.povUp(), // povUp
-        driver.b(), // right bumper
+        driver.b(), // TODO: right bumper
         driver.rightTrigger(0.9) // right trigger
       );
     }
@@ -87,7 +88,7 @@ public class RobotContainer {
     telescope.logIO();
     launcher.logIO();
     endEffector.logIO();
-    statemachine.logState();
+    statemachine.logData();
     PhoenixUtil.refreshAll();
   }
 

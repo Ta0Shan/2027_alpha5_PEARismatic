@@ -25,7 +25,7 @@ public class EEIOSim extends EEIOTalonFX {
     private final FlywheelSim rollerPhysicsSim = new FlywheelSim(
         Models.flywheelFromPhysicalConstants(DCMotor.getKrakenX60Foc(1),
             (0.5) * (Units.lbsToKilograms(1)) * (Math.pow(Units.inchesToMeters(1), 2)),
-            EEConstants.FURTHER_CW_ROLLER_REDUCTION),
+            EEConstants.ROLLER_REDUCTION),
         DCMotor.getKrakenX60Foc(1)
     );
 
@@ -58,9 +58,9 @@ public class EEIOSim extends EEIOTalonFX {
         wristSimState.setRawRotorPosition(Units.radiansToRotations(wristPhysicsSim.getAngle()) * EEConstants.WRIST_REDUCTION);
         wristSimState.setRotorVelocity(Units.radiansToRotations(wristPhysicsSim.getVelocity()) * EEConstants.WRIST_REDUCTION);
         
-        rollerPosition += rollerPhysicsSim.getAngularVelocity() * Constants.UPDATE_FREQ_SEC * EEConstants.FURTHER_CW_ROLLER_REDUCTION;
+        rollerPosition += rollerPhysicsSim.getAngularVelocity() * Constants.UPDATE_FREQ_SEC * EEConstants.ROLLER_REDUCTION;
         rollerSimState.setRawRotorPosition(Units.radiansToRotations(rollerPosition));
-        rollerSimState.setRotorVelocity(Units.radiansToRotations(rollerPhysicsSim.getAngularVelocity()) * EEConstants.FURTHER_CW_ROLLER_REDUCTION);
+        rollerSimState.setRotorVelocity(Units.radiansToRotations(rollerPhysicsSim.getAngularVelocity()) * EEConstants.ROLLER_REDUCTION);
 
     }
 }

@@ -13,12 +13,13 @@ public class EEConstants {
 
     public static enum WristStates {
         STOWED(0),
-        DEPLOYED(100),
-        L1_FRONT(120),
-        L1_BACK(60),
-        L2_FRONT(120),
-        L2_BACK(60),
-        CLASSIFIER(0);
+        DEPLOYED(201),
+        L1_FRONT(126),
+        L1_BACK(49),
+        L2_FRONT(126),
+        L2_BACK(88),
+        CLASSIFIER_FRONT(177),
+        CLASSIFIER_BACK(66);
 
         private final double angleFromArmDeg;
 
@@ -52,9 +53,10 @@ public class EEConstants {
     public static final int WRIST_ID = 51;
     public static final int ROLLERS_ID = 52;
 
-    public static final double WRIST_REDUCTION = (36.0 / 8.0) * (38.0/14.0) * (36.0/14.0) * (20.0/16.0);
-    public static final double FURTHER_CW_ROLLER_REDUCTION = (32.0/16.0) * (30.0/24.0);
-    public static final double FURTHER_CCW_ROLLER_REDUCTION = (32.0/16.0) * (36.0/24.0) * (30.0/30.0); // unused bc voltage control
+    public static final double WRIST_REDUCTION = (32.0/12.0) * (32.0/12.0) * (50.0/12.0); // (36.0 / 8.0) * (38.0/14.0) * (36.0/14.0) * (20.0/16.0);
+    public static final double ROLLER_REDUCTION = (22.0/22.0) * (36.0/16.0);
+    // public static final double FURTHER_CW_ROLLER_REDUCTION = (32.0/16.0) * (30.0/24.0);
+    // public static final double FURTHER_CCW_ROLLER_REDUCTION = (32.0/16.0) * (36.0/24.0) * (30.0/30.0); // unused bc voltage control
 
     public static final TalonFXConfiguration WRIST_CONFIG() {
         TalonFXConfiguration config = new TalonFXConfiguration();

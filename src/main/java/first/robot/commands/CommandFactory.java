@@ -52,18 +52,7 @@ public class CommandFactory {
         ).named(instantApplyState(state).name());
     }
     
-    public Command classify() {
-        return Command.requiring(telescope, launcher, endEffector).executing(co -> {
-            co.fork(instantApplyState(SuperstructureStates.LAUNCHER));
-            co.awaitAll(
-                telescope.setPivotAngleDeg(20),
-                launcher.setLauncherRPS(60) // TODO: get a calc
-            );
-            co.await(pause(1));
-        }).named("CLASSIFY");
-    }
-    public Command shuttle() {// TODO: right now its the same thing but you gotta figure out how to get vision/pos working to change it
-                                // and also maybe CSV reading for fun
+    public Command shuttle() {// TODO: maybe look into how to read csv for lerp
         return Command.requiring(telescope, launcher, endEffector).executing(co -> {
             co.fork(instantApplyState(SuperstructureStates.LAUNCHER));
             co.awaitAll(
@@ -81,9 +70,9 @@ public class CommandFactory {
     public Command neutralAlign() {
         return pause(1);
     }
-    // TODO: implement colored alignment rather than placement, use a switchTo().whenComplete() to go from level -> align 
+    // TODO: pose
 
-    public Command score() { // TODO: put alignment in here
+    public Command score() {
         return Command.requiring(endEffector).executing(co -> {
             co.fork(endEffector.applyState(RollerStates.REV));
             co.await(pause(0.5));
@@ -105,8 +94,13 @@ public class CommandFactory {
         }).named("HOLD");
     }
 
+
     public SuperstructureStates getSuperstructureState() {
         return superstructureState;
+    }
+
+    public double getEEAngleFromFloorDeg() {
+        return endEffector.getWristAngleDeg() - telescope.getPivotAngleDeg();
     }
 
 }

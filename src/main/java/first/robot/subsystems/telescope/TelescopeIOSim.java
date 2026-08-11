@@ -30,10 +30,10 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         Units.degreesToRadians(PivotConstants.STARTING_ANGLE_DEG)
     );
 
-    private final VariableLengthArmSim psim = new VariableLengthArmSim(
-        DCMotor.getKrakenX60Foc(3), 
-        PivotConstants.REDUCTION, 0, 0, 0, 0, 0, false
-    );
+    // private final VariableLengthArmSim psim = new VariableLengthArmSim(
+    //     DCMotor.getKrakenX60Foc(3), 
+    //     PivotConstants.REDUCTION, 0, 0, 0, 0, 0, false
+    // );
 
     public TelescopeIOSim() {
         super();

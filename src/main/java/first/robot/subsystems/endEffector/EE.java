@@ -25,11 +25,10 @@ public class EE extends Mechanism {
     public void logIO() {
             io.updateInputs(inputs);
             SmartDashboard.putString("Mechanisms/End Effector/State", wristState.name() + " " + rollerState.name());
-            SmartDashboard.putNumber("Mechanisms/End Effector/Wrist/Angle Deg", Units.rotationsToDegrees(inputs.wristData.position()) / EEConstants.WRIST_REDUCTION);
+            SmartDashboard.putNumber("Mechanisms/End Effector/Wrist/Angle Deg", getWristAngleDeg());
             SmartDashboard.putNumber("Mechanisms/End Effector/Wrist/Setpoint Deg", wristState.getAngleDeg());
             SmartDashboard.putNumber("Mechanisms/End Effector/Rollers/Voltage Setpoint", rollerState.getVoltage());
-            SmartDashboard.putNumber("Mechanisms/End Effector/Rollers/Further CW RPS", inputs.rollerData.velocity() / EEConstants.FURTHER_CW_ROLLER_REDUCTION);
-            SmartDashboard.putNumber("Mechanisms/End Effector/Rollers/Further CCW RPS", inputs.rollerData.velocity() / EEConstants.FURTHER_CCW_ROLLER_REDUCTION);
+            SmartDashboard.putNumber("Mechanisms/End Effector/Rollers/RPS", inputs.rollerData.velocity() / EEConstants.ROLLER_REDUCTION);
     }
 
     public Command applyState(WristStates wristState, RollerStates rollerState) {
@@ -58,5 +57,9 @@ public class EE extends Mechanism {
 
     public RollerStates getRollerState() {
         return rollerState;
+    }
+
+    public double getWristAngleDeg() {
+        return Units.rotationsToDegrees(inputs.wristData.position()) / EEConstants.WRIST_REDUCTION;
     }
 }

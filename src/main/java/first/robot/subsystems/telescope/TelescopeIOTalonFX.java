@@ -8,17 +8,13 @@ import java.util.function.DoubleSupplier;
 
 import org.wpilib.math.util.Units;
 
-import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
-import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 import first.robot.Constants;
 import first.robot.subsystems.telescope.TelescopeConstants.ArmConstants;
-import first.robot.subsystems.telescope.TelescopeConstants.EEConstants;
 import first.robot.subsystems.telescope.TelescopeConstants.PivotConstants;
 import first.robot.util.PearadoxTalonFX;
 import first.robot.util.PhoenixUtil;
@@ -35,14 +31,8 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
     protected final PearadoxTalonFX arm1;
     protected final PearadoxTalonFX arm2;
 
-    protected final PearadoxTalonFX wrist;
-    protected final PearadoxTalonFX rollers;
-
     protected final MotionMagicDutyCycle pivotMMDutyCycle;
     protected final MotionMagicDutyCycle armMMDutyCycle;
-    protected final MotionMagicDutyCycle wristMMDutyCycle;
-
-    protected final VoltageOut rollerVoltageOut;
 
     protected final Follower pivot2Follow1;
     protected final Follower pivot3Follow1;
@@ -73,21 +63,10 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
             ArmConstants.CONFIG(),
             Subsystem.TELESCOPE_EXTENSION);
 
-        wrist = new PearadoxTalonFX(EEConstants.WRIST_ID,
-            EEConstants.WRIST_CONFIG(),
-            Subsystem.EE_PIVOT);
-
-        rollers = new PearadoxTalonFX(EEConstants.ROLLERS_ID,
-            EEConstants.ROLLER_CONFIG(),
-            Subsystem.EE_ROLLERS);
-
         
         // setting up control modes
         pivotMMDutyCycle = new MotionMagicDutyCycle(0);
         armMMDutyCycle = new MotionMagicDutyCycle(0);
-        wristMMDutyCycle = new MotionMagicDutyCycle(0);
-
-        rollerVoltageOut = new VoltageOut(0);
 
         pivot2Follow1 = new Follower(pivot1.getDeviceID(), MotorAlignmentValue.Opposed);
         pivot2.setControl(pivot2Follow1);
@@ -107,9 +86,6 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
 
         inputs.arm1Data = arm1.getData();
         inputs.arm2Data = arm2.getData();
-
-        inputs.wristData = wrist.getData();
-        inputs.rollersData = rollers.getData();
     }
 
     public void setPivotAngle(double angleDeg) {
@@ -132,20 +108,6 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
         double motorSetpoint = extensionInches * ArmConstants.EXTENSION_ROTOR_CIRCUMF_INCHES
                  * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION);
             arm1.setControl(armMMDutyCycle.withPosition(motorSetpoint).withFeedForward(ff.getAsDouble()));
-    }
-
-    public void setWristAngle(double angleDeg) {
-        double motorSetpoint = angleDeg * EEConstants.WRIST_REDUCTION;
-        wrist.setControl(wristMMDutyCycle.withPosition(motorSetpoint));
-    }
-
-    public void setWristAngle(double angleDeg, DoubleSupplier ff) {
-        double motorSetpoint = angleDeg * EEConstants.WRIST_REDUCTION;
-        wrist.setControl(wristMMDutyCycle.withPosition(motorSetpoint).withFeedForward(ff.getAsDouble()));
-    }
-
-    public void setRollerVolts(double volts) {
-        rollers.setControl(rollerVoltageOut.withOutput(volts));
     }
 
 }
