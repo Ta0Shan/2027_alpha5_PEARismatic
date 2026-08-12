@@ -63,13 +63,13 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         pivot1SimState.setSupplyVoltage(12);
         pivot2SimState.setSupplyVoltage(12);
         pivot3SimState.setSupplyVoltage(12);
-        // pivotPhysicsSim.setInputVoltage(pivot1SimState.getMotorVoltage());
-        pivotPhysicsSim.setInputVoltage((pivot1SimState.getMotorVoltage() + pivot2SimState.getMotorVoltage() + pivot3SimState.getMotorVoltage()) / 3);
+        pivotPhysicsSim.setInputVoltage(pivot1SimState.getMotorVoltage());
+        // pivotPhysicsSim.setInputVoltage((pivot1SimState.getMotorVoltage() + pivot2SimState.getMotorVoltage() + pivot3SimState.getMotorVoltage()) / 3);
 
         arm1SimState.setSupplyVoltage(12);
         arm2SimState.setSupplyVoltage(12);
-        // armPhysicsSim.setInputVoltage(arm1SimState.getMotorVoltage());
-        armPhysicsSim.setInputVoltage((arm1SimState.getMotorVoltage() + -arm2SimState.getMotorVoltage()) / 2);
+        armPhysicsSim.setInputVoltage(arm1SimState.getMotorVoltage());
+        // armPhysicsSim.setInputVoltage((arm1SimState.getMotorVoltage() + arm2SimState.getMotorVoltage()) / 2);
 
         pivotPhysicsSim.update(Constants.UPDATE_PERIOD_SEC);
         armPhysicsSim.update(Constants.UPDATE_PERIOD_SEC);
@@ -82,10 +82,10 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         pivot3SimState.setRotorVelocity(Units.radiansToRotations(pivotPhysicsSim.getVelocity()) * PivotConstants.REDUCTION);
         absoluteEncoderSimState.setRawPosition(Units.radiansToRotations(pivotPhysicsSim.getAngle()));
 
-        arm1SimState.setRawRotorPosition((armPhysicsSim.getPosition() / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
-        arm2SimState.setRawRotorPosition((armPhysicsSim.getPosition() / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
-        arm1SimState.setRotorVelocity((armPhysicsSim.getVelocity() / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
-        arm2SimState.setRotorVelocity((armPhysicsSim.getVelocity() / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
+        arm1SimState.setRawRotorPosition((armPhysicsSim.getPosition() / ArmConstants.ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
+        arm2SimState.setRawRotorPosition((armPhysicsSim.getPosition() / ArmConstants.ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
+        arm1SimState.setRotorVelocity((armPhysicsSim.getVelocity() / ArmConstants.ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
+        arm2SimState.setRotorVelocity((armPhysicsSim.getVelocity() / ArmConstants.ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
     }
 
     private double estimateCGRadius(double extensionLength) {

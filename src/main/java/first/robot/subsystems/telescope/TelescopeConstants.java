@@ -97,11 +97,11 @@ public class TelescopeConstants {
         public static final int ARM_1_ID = 31;
         public static final int ARM_2_ID = 32;
         
-        public static final double EXTENSION_REDUCTION = (48./26.) * (48./12.) * (30./28.) * (50./80.) * (40./50.);
-        public static final double EXTENSION_ROTOR_CIRCUMF_METERS = Units.inchesToMeters(Math.PI * (26./20.));
-        
-        public static final double CLIMB_REDUCTION = (50./80.) * (40./50.) * (40./16.) * (48./12.) * (30./28.) * (50./20.);
-        public static final double CLIMB_ROTOR_CIRCUMF_INCHES = Math.PI * (26./20.);
+        public static final double BASE_REDUCTION = (40./50.) * (50/80.) * (48./12.) * (30./30.) * (30./28.);
+        public static final double EXTENSION_REDUCTION = BASE_REDUCTION * (30./40.) * (40./16.);
+        public static final double CLIMB_REDUCTION = BASE_REDUCTION * (50./20.) * (40./16.);
+
+        public static final double ROTOR_CIRCUMF_METERS = Units.inchesToMeters(Math.PI * (1.2871145)); // TODO: double check this number
         
         public static final TalonFXConfiguration CONFIG() {
             TalonFXConfiguration config = new TalonFXConfiguration();
@@ -137,7 +137,7 @@ public class TelescopeConstants {
         public static final double CARRIAGE_MASS_KG = Units.lbsToKilograms(1.8563182);
         public static final double STATIC_STAGE_MASS_KG = MASS_KG - CARRIAGE_MASS_KG;
 
-        public static final double CARRIAGE_DRUM_RADIUS_METERS = Units.inchesToMeters(0.16 / 2.);
+        public static final double CARRIAGE_DRUM_RADIUS_METERS = (ROTOR_CIRCUMF_METERS / Math.PI) / 2;
 
 
         public static final double STATIC_STAGE_MOI = (1./3.) * STATIC_STAGE_MASS_KG * Math.pow(STATIC_STAGE_LENGTH_METERS/2, 2);

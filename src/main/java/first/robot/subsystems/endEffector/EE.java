@@ -24,6 +24,8 @@ public class EE extends Mechanism {
 
     public void logIO() {
             io.updateInputs(inputs);
+            Logger.processInputs("End Effector", inputs);
+
             Logger.recordOutput("Mechanisms/End Effector/State", wristState.name() + " " + rollerState.name());
             Logger.recordOutput("Mechanisms/End Effector/Wrist/Angle Deg", getWristAngleDeg());
             Logger.recordOutput("Mechanisms/End Effector/Wrist/Setpoint Deg", wristState.getAngleDeg());

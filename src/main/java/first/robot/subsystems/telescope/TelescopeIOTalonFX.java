@@ -66,7 +66,7 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
         pivot2.setControl(follower.withLeaderID(PivotConstants.PIVOT_1_ID).withMotorAlignment(MotorAlignmentValue.Opposed));
         pivot3.setControl(follower.withMotorAlignment(MotorAlignmentValue.Aligned));
 
-        arm2.setControl(follower.withLeaderID(ArmConstants.ARM_1_ID).withMotorAlignment(MotorAlignmentValue.Opposed));
+        arm2.setControl(follower.withLeaderID(ArmConstants.ARM_1_ID).withMotorAlignment(MotorAlignmentValue.Aligned));
 
         syncMotorsWithEncoder();
     }
@@ -99,13 +99,13 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
     }
 
     public void setArmExtensionIn(boolean isClimbing, double extensionInches) {
-        double motorSetpoint = (Units.inchesToMeters(extensionInches) / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS)
+        double motorSetpoint = (Units.inchesToMeters(extensionInches) / ArmConstants.ROTOR_CIRCUMF_METERS)
                 * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION);
         arm1.setControl(mmDutyCycle.withPosition(motorSetpoint));
     }
 
     public void setArmExtensionIn(boolean isClimbing, double extensionInches, DoubleSupplier ff) {
-        double motorSetpoint = (Units.inchesToMeters(extensionInches) / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS)
+        double motorSetpoint = (Units.inchesToMeters(extensionInches) / ArmConstants.ROTOR_CIRCUMF_METERS)
                  * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION);
             arm1.setControl(mmDutyCycle.withPosition(motorSetpoint).withFeedForward(ff.getAsDouble()));
     }

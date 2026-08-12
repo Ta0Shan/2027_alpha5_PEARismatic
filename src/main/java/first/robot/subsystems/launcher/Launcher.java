@@ -24,6 +24,7 @@ public class Launcher extends Mechanism {
 
     public void logIO() {
         io.updateInputs(inputs);
+        Logger.processInputs("Launcher", inputs);
 
         Logger.recordOutput("Mechanisms/Launcher/Left/RPS Target",
         (meanRPSTarget == 0 ? 0 : ((meanRPSTarget * LauncherConstants.REDUCTION) + (LauncherConstants.RPS_DIFFERENCE / 2)) / LauncherConstants.REDUCTION));

@@ -30,12 +30,12 @@ public class Telescope extends Mechanism {
 
     public void logIO() {
         io.updateInputs(inputs);
+        Logger.processInputs("Telescope", inputs);
         Logger.recordOutput("Mechanisms/Telescope/Pivot/Setpoint Angle Deg", (state == TelescopeStates.LAUNCHER ? setpoint : state.getPivotAngleDeg()));
         Logger.recordOutput("Mechanisms/Telescope/Pivot/Angle Deg", getPivotAngleDeg());
         Logger.recordOutput("Mechanisms/Telescope/Pivot/Abs Encoder Angle Deg", Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition));
         Logger.recordOutput("Mechanisms/Telescope/Arm/Extension Inches", getArmExtensionInches());
         Logger.recordOutput("Mechanisms/Telescope/Arm/Setpoint Extension Inches", state.getArmExtensionInches());
-        Logger.processInputs("Telescope", inputs);
     }
 
     public Command applyState(TelescopeStates state) {
@@ -43,8 +43,8 @@ public class Telescope extends Mechanism {
             this.state = state;
             if (state != TelescopeStates.LAUNCHER) { 
                 // to prevent conflicts when we need to schedule a launcher cmd bc that's a specific case
-                while(Math.abs((state.getPivotAngleDeg() - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / state.getPivotAngleDeg()) > 0.05){
-                        // && Math.abs((state.getArmExtensionInches() - getArmExtensionInches()) / state.getArmExtensionInches()) > 0.05) {
+                while(Math.abs((state.getPivotAngleDeg() - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / state.getPivotAngleDeg()) > 0.05
+                        || Math.abs((state.getArmExtensionInches() - getArmExtensionInches()) / state.getArmExtensionInches()) > 0.05) {
                     // functions as a timer, cmd gives up control when it's close to its setpoint
                     io.setPivotAngleDeg(state.getPivotAngleDeg());
                     io.setArmExtensionIn(state==TelescopeStates.CLUMB, state.getArmExtensionInches());
@@ -82,9 +82,9 @@ public class Telescope extends Mechanism {
     public double getArmExtensionInches() {
         return (mean(
             inputs.arm1Data.position(),
-            -inputs.arm2Data.position()) // because this one follows in the opposed direction
+            inputs.arm2Data.position())
             / ArmConstants.EXTENSION_REDUCTION
-            * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS
+            * Units.metersToInches(ArmConstants.ROTOR_CIRCUMF_METERS)
         );
     }
 
