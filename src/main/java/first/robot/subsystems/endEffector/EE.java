@@ -1,9 +1,9 @@
 package first.robot.subsystems.endEffector;
 
+import org.littletonrobotics.junction.Logger;
 import org.wpilib.command3.Command;
 import org.wpilib.command3.Mechanism;
 import org.wpilib.math.util.Units;
-import org.wpilib.smartdashboard.SmartDashboard;
 
 import first.robot.subsystems.endEffector.EEConstants.WristStates;
 import first.robot.subsystems.endEffector.EEConstants.RollerStates;
@@ -24,11 +24,11 @@ public class EE extends Mechanism {
 
     public void logIO() {
             io.updateInputs(inputs);
-            SmartDashboard.putString("Mechanisms/End Effector/State", wristState.name() + " " + rollerState.name());
-            SmartDashboard.putNumber("Mechanisms/End Effector/Wrist/Angle Deg", getWristAngleDeg());
-            SmartDashboard.putNumber("Mechanisms/End Effector/Wrist/Setpoint Deg", wristState.getAngleDeg());
-            SmartDashboard.putNumber("Mechanisms/End Effector/Rollers/Voltage Setpoint", rollerState.getVoltage());
-            SmartDashboard.putNumber("Mechanisms/End Effector/Rollers/RPS", inputs.rollerData.velocity() / EEConstants.ROLLER_REDUCTION);
+            Logger.recordOutput("Mechanisms/End Effector/State", wristState.name() + " " + rollerState.name());
+            Logger.recordOutput("Mechanisms/End Effector/Wrist/Angle Deg", getWristAngleDeg());
+            Logger.recordOutput("Mechanisms/End Effector/Wrist/Setpoint Deg", wristState.getAngleDeg());
+            Logger.recordOutput("Mechanisms/End Effector/Rollers/Voltage Setpoint", rollerState.getVoltage());
+            Logger.recordOutput("Mechanisms/End Effector/Rollers/RPS", inputs.rollerData.velocity() / EEConstants.ROLLER_REDUCTION);
     }
 
     public Command applyState(WristStates wristState, RollerStates rollerState) {
@@ -41,7 +41,7 @@ public class EE extends Mechanism {
                 // functions as a timer, cmd gives up control when it's close to its setpoint
                 co.yield();
             }
-        }).named("APPLY STATE " + wristState.name() + " " + rollerState.name());
+        }).named("EE " + wristState.name() + " " + rollerState.name());
     }
 
     public Command applyState(WristStates wristState) {

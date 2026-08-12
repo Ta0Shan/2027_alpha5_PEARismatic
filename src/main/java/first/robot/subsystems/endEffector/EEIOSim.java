@@ -51,14 +51,14 @@ public class EEIOSim extends EEIOTalonFX {
         rollerPhysicsSim.setInputVoltage(rollerSimState.getMotorVoltage());
 
 
-        wristPhysicsSim.update(Constants.UPDATE_FREQ_SEC);
-        rollerPhysicsSim.update(Constants.UPDATE_FREQ_SEC);
+        wristPhysicsSim.update(Constants.UPDATE_PERIOD_SEC);
+        rollerPhysicsSim.update(Constants.UPDATE_PERIOD_SEC);
         
         
         wristSimState.setRawRotorPosition(Units.radiansToRotations(wristPhysicsSim.getAngle()) * EEConstants.WRIST_REDUCTION);
         wristSimState.setRotorVelocity(Units.radiansToRotations(wristPhysicsSim.getVelocity()) * EEConstants.WRIST_REDUCTION);
         
-        rollerPosition += rollerPhysicsSim.getAngularVelocity() * Constants.UPDATE_FREQ_SEC * EEConstants.ROLLER_REDUCTION;
+        rollerPosition += rollerPhysicsSim.getAngularVelocity() * Constants.UPDATE_PERIOD_SEC * EEConstants.ROLLER_REDUCTION;
         rollerSimState.setRawRotorPosition(Units.radiansToRotations(rollerPosition));
         rollerSimState.setRotorVelocity(Units.radiansToRotations(rollerPhysicsSim.getAngularVelocity()) * EEConstants.ROLLER_REDUCTION);
 

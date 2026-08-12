@@ -9,7 +9,7 @@ import first.robot.subsystems.telescope.TelescopeConstants.TelescopeStates;
 public class Constants {
     public static final CANBus CAN_BUS = new CANBus("bus");
     public static final double UPDATE_FREQ_HZ = 50;
-    public static final double UPDATE_FREQ_SEC = 1 / UPDATE_FREQ_HZ;
+    public static final double UPDATE_PERIOD_SEC = 1 / UPDATE_FREQ_HZ;
 
     public static enum SuperstructureStates {
         HOME(TelescopeStates.HOME, WristStates.STOWED, RollerStates.IDLE, 0.0),

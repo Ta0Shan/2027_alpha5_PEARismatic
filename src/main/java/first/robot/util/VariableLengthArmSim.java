@@ -150,7 +150,7 @@ public class VariableLengthArmSim extends LinearSystemSim<N2, N1, N2> {
     /**
      * Returns the current arm angle.
      *
-     * @return The current arm angle.
+     * @return The current arm angle in radians.
      */
     public double getAngle() {
         return m_y.get(0, 0);
@@ -159,7 +159,7 @@ public class VariableLengthArmSim extends LinearSystemSim<N2, N1, N2> {
     /**
      * Returns the current arm velocity.
      *
-     * @return The current arm velocity.
+     * @return The current arm velocity in radians per second.
      */
     public double getVelocity() {
         return m_x.get(1, 0);

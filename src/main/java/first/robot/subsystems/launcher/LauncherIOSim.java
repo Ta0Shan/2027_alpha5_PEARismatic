@@ -46,11 +46,11 @@ public class LauncherIOSim extends LauncherIOTalonFX {
         launcher2SimState.setSupplyVoltage(12);
         launcher2PhysicsSim.setInputVoltage(launcher2SimState.getMotorVoltage());
 
-        launcher1PhysicsSim.update(Constants.UPDATE_FREQ_SEC);
-        launcher2PhysicsSim.update(Constants.UPDATE_FREQ_SEC);
+        launcher1PhysicsSim.update(Constants.UPDATE_PERIOD_SEC);
+        launcher2PhysicsSim.update(Constants.UPDATE_PERIOD_SEC);
 
-        launcher1Position += launcher1PhysicsSim.getAngularVelocity() * Constants.UPDATE_FREQ_SEC * LauncherConstants.REDUCTION;
-        launcher2Position += launcher2PhysicsSim.getAngularVelocity() * Constants.UPDATE_FREQ_SEC * LauncherConstants.REDUCTION;
+        launcher1Position += launcher1PhysicsSim.getAngularVelocity() * Constants.UPDATE_PERIOD_SEC * LauncherConstants.REDUCTION;
+        launcher2Position += launcher2PhysicsSim.getAngularVelocity() * Constants.UPDATE_PERIOD_SEC * LauncherConstants.REDUCTION;
 
         launcher1SimState.setRawRotorPosition(Units.radiansToRotations(launcher1Position));
         launcher1SimState.setRotorVelocity(Units.radiansToRotations(launcher1PhysicsSim.getAngularVelocity()) * LauncherConstants.REDUCTION);

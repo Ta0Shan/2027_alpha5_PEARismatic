@@ -2,6 +2,7 @@ package first.robot.subsystems.telescope;
 
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.math.util.Units;
+import org.wpilib.simulation.ElevatorSim;
 import org.wpilib.simulation.SingleJointedArmSim;
 
 import com.ctre.phoenix6.sim.CANcoderSimState;
@@ -11,6 +12,7 @@ import first.robot.Constants;
 import first.robot.subsystems.endEffector.EEConstants;
 import first.robot.subsystems.telescope.TelescopeConstants.ArmConstants;
 import first.robot.subsystems.telescope.TelescopeConstants.PivotConstants;
+import first.robot.util.PhoenixUtil;
 import first.robot.util.TiltedElevatorSim;
 import first.robot.util.VariableLengthArmSim;
 
@@ -38,8 +40,8 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         ArmConstants.EXTENSION_REDUCTION,
         ArmConstants.CARRIAGE_MASS_KG,
         ArmConstants.CARRIAGE_DRUM_RADIUS_METERS,
-        ArmConstants.MIN_LENGTH_METERS,
-        ArmConstants.MAX_LENGTH_METERS,
+        0,
+        ArmConstants.MAX_EXTENSION_METERS,
         false
     );
 
@@ -61,14 +63,16 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         pivot1SimState.setSupplyVoltage(12);
         pivot2SimState.setSupplyVoltage(12);
         pivot3SimState.setSupplyVoltage(12);
+        // pivotPhysicsSim.setInputVoltage(pivot1SimState.getMotorVoltage());
         pivotPhysicsSim.setInputVoltage((pivot1SimState.getMotorVoltage() + pivot2SimState.getMotorVoltage() + pivot3SimState.getMotorVoltage()) / 3);
 
         arm1SimState.setSupplyVoltage(12);
         arm2SimState.setSupplyVoltage(12);
-        armPhysicsSim.setInputVoltage((arm1SimState.getMotorVoltage() + arm2SimState.getMotorVoltage()) / 2);
+        // armPhysicsSim.setInputVoltage(arm1SimState.getMotorVoltage());
+        armPhysicsSim.setInputVoltage((arm1SimState.getMotorVoltage() + -arm2SimState.getMotorVoltage()) / 2);
 
-        pivotPhysicsSim.update(Constants.UPDATE_FREQ_SEC);
-        armPhysicsSim.update(Constants.UPDATE_FREQ_SEC);
+        pivotPhysicsSim.update(Constants.UPDATE_PERIOD_SEC);
+        armPhysicsSim.update(Constants.UPDATE_PERIOD_SEC);
 
         pivot1SimState.setRawRotorPosition(Units.radiansToRotations(pivotPhysicsSim.getAngle()) * PivotConstants.REDUCTION);
         pivot2SimState.setRawRotorPosition(Units.radiansToRotations(pivotPhysicsSim.getAngle()) * PivotConstants.REDUCTION);
@@ -78,10 +82,10 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         pivot3SimState.setRotorVelocity(Units.radiansToRotations(pivotPhysicsSim.getVelocity()) * PivotConstants.REDUCTION);
         absoluteEncoderSimState.setRawPosition(Units.radiansToRotations(pivotPhysicsSim.getAngle()));
 
-        arm1SimState.setRawRotorPosition(armPhysicsSim.getPositionMeters() * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS * ArmConstants.EXTENSION_REDUCTION);
-        arm2SimState.setRawRotorPosition(armPhysicsSim.getPositionMeters() * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS * ArmConstants.EXTENSION_REDUCTION);
-        arm1SimState.setRotorVelocity(armPhysicsSim.getVelocityMetersPerSecond() * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS * ArmConstants.EXTENSION_REDUCTION);
-        arm2SimState.setRotorVelocity(armPhysicsSim.getVelocityMetersPerSecond() * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS * ArmConstants.EXTENSION_REDUCTION);
+        arm1SimState.setRawRotorPosition((armPhysicsSim.getPosition() / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
+        arm2SimState.setRawRotorPosition((armPhysicsSim.getPosition() / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
+        arm1SimState.setRotorVelocity((armPhysicsSim.getVelocity() / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
+        arm2SimState.setRotorVelocity((armPhysicsSim.getVelocity() / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
     }
 
     private double estimateCGRadius(double extensionLength) {

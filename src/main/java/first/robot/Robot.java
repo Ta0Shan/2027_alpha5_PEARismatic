@@ -7,15 +7,16 @@ package first.robot;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.wpilib.command3.Command;
 import org.wpilib.command3.Scheduler;
 import org.wpilib.command3.SchedulerEvent.CompletedWithError;
 import org.wpilib.command3.SchedulerEvent.Interrupted;
 import org.wpilib.command3.SchedulerEvent.Canceled;
-import org.wpilib.framework.TimedRobot;
-import org.wpilib.smartdashboard.SmartDashboard;
 
-public class Robot extends TimedRobot {
+public class Robot extends LoggedRobot {
   private Command autonomousCommand;
 
   private final RobotContainer robotContainer;
@@ -30,6 +31,9 @@ public class Robot extends TimedRobot {
     scheduler.addPeriodic(() -> robotContainer.periodic());
 
     problemCommands = new ArrayList<String>();
+
+    Logger.addDataReceiver(new NT4Publisher());
+    Logger.start();
   }
 
   @Override
@@ -42,27 +46,27 @@ public class Robot extends TimedRobot {
       names[i] = runningCommands[i].name();
     }
     
-    SmartDashboard.putStringArray("Commands/Running", names);
+    Logger.recordOutput("Commands/Running", names);
 
     // outputs important events: non-idle interruptions and errored completions
     scheduler.addEventListener(event -> {
       String message;
       switch(event) {
         case CompletedWithError(Command cmd, Error error, long time):
-          message = ((double)Math.round(time / 1000.0) / 1000.0) + " | Error with " + cmd.name() + ": " + error.toString();
+          message = ((double)Math.round(time / 10000.0) / 100.0) + " | Error with " + cmd.name() + ": " + error.toString();
           if (!problemCommands.contains(message)) {
             problemCommands.add(0, message);
           }
           break;
         case Interrupted(Command cmd, Command inter, long time):
-          message = ((double)Math.round(time / 1000.0) / 1000.0) + " | " + cmd.name() + " interrupted by " + inter.name();
+          message = ((double)Math.round(time / 10000.0) / 100.0) + " | " + cmd.name() + " interrupted by " + inter.name();
           if(!cmd.name().contains("[IDLE]") && !problemCommands.contains(message)) {
             problemCommands.add(0, message);
           }
           break;
           // cancellations not rly that important but if necessary we can add
           // case Canceled(Command cmd, long time):
-          //   message = ((double)Math.round(time / 1000.0) / 1000.0) + " | " + cmd.name() + " canceled";
+          //   message = ((double)Math.round(time / 10000.0) / 100.0) + " | " + cmd.name() + " canceled";
           //   if(!cmd.name().contains("[IDLE]") && !problemCommands.contains(message)) {
           //     problemCommands.add(0, message);
           //   }
@@ -72,8 +76,8 @@ public class Robot extends TimedRobot {
       }
     });
 
-    SmartDashboard.putStringArray("Commands/Special Events/List", problemCommands.toArray(String[]::new));
-    SmartDashboard.putString("Commands/Special Events/Recent ", (problemCommands.size() > 0 ? problemCommands.get(0) : ""));
+    Logger.recordOutput("Commands/Special Events/List", problemCommands.toArray(String[]::new));
+    Logger.recordOutput("Commands/Special Events/Recent ", (problemCommands.size() > 0 ? problemCommands.get(0) : ""));
   }
 
   @Override

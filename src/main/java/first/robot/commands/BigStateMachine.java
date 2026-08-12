@@ -4,9 +4,9 @@
 
 package first.robot.commands;
 
+import org.littletonrobotics.junction.Logger;
 import org.wpilib.command3.StateMachine;
 import org.wpilib.command3.StateMachine.State;
-import org.wpilib.smartdashboard.SmartDashboard;
 
 import org.wpilib.command3.Trigger;
 
@@ -151,8 +151,8 @@ public class BigStateMachine {
     }
 
     public void logData() {
-        SmartDashboard.putString("Mechanisms/Superstructure State", factory.getSuperstructureState().name());
-        SmartDashboard.putNumber("Mechanisms/End Effector/Wrist/Angle From Floor Deg", factory.getEEAngleFromFloorDeg());
+        Logger.recordOutput("Mechanisms/Superstructure State", factory.getSuperstructureState().name());
+        Logger.recordOutput("Mechanisms/End Effector/Wrist/Angle From Floor Deg", factory.getEEAngleFromFloorDeg());
     }
 
 }

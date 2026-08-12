@@ -125,7 +125,7 @@ public class TiltedElevatorSim extends LinearSystemSim<N2, N1, N2> {
      * @return Whether the elevator has hit the lower limit.
      */
     public boolean hasHitLowerLimit() {
-        return wouldHitLowerLimit(getPositionMeters());
+        return wouldHitLowerLimit(getPosition());
     }
 
     /**
@@ -134,24 +134,24 @@ public class TiltedElevatorSim extends LinearSystemSim<N2, N1, N2> {
      * @return Whether the elevator has hit the upper limit.
      */
     public boolean hasHitUpperLimit() {
-        return wouldHitUpperLimit(getPositionMeters());
+        return wouldHitUpperLimit(getPosition());
     }
 
     /**
      * Returns the position of the elevator.
      *
-     * @return The position of the elevator.
+     * @return The position of the elevator in meters.
      */
-    public double getPositionMeters() {
+    public double getPosition() {
         return getOutput(0);
     }
 
     /**
      * Returns the velocity of the elevator.
      *
-     * @return The velocity of the elevator.
+     * @return The velocity of the elevator in meters per second.
      */
-    public double getVelocityMetersPerSecond() {
+    public double getVelocity() {
         return m_x.get(1, 0);
     }
 
@@ -165,7 +165,7 @@ public class TiltedElevatorSim extends LinearSystemSim<N2, N1, N2> {
         // Reductions are greater than 1, so a reduction of 10:1 would mean the motor is
         // spinning 10x faster than the output
         // v = r w, so w = v/r
-        double motorVelocityRadPerSec = getVelocityMetersPerSecond() / m_drumRadius * m_gearing;
+        double motorVelocityRadPerSec = getVelocity() / m_drumRadius * m_gearing;
         var appliedVoltage = m_u.get(0, 0);
         return m_gearbox.getCurrent(motorVelocityRadPerSec, appliedVoltage) * Math.signum(appliedVoltage);
     }

@@ -2,7 +2,7 @@ package first.robot.subsystems.telescope;
 
 import java.util.function.DoubleSupplier;
 
-import org.littletonrobotics.junction.AutoLog; // it doesn't work right now
+import org.littletonrobotics.junction.AutoLog;
 
 import first.robot.util.PearadoxTalonFX.MotorData;
 
@@ -22,11 +22,11 @@ public interface TelescopeIO {
 
     public default void updateInputs(TelescopeIOInputs inputs) {}
 
-    public default void setPivotAngle(double angleDeg) {}
+    public default void setPivotAngleDeg(double angleDeg) {}
 
-    public default void setPivotAngle(double angleDeg, DoubleSupplier ff) {}
+    public default void setPivotAngleDeg(double angleDeg, DoubleSupplier ff) {}
 
-    public default void setArmExtension(boolean isClimbing, double extensionInches) {}
+    public default void setArmExtensionIn(boolean isClimbing, double extensionInches) {}
 
-    public default void setArmExtension(boolean isClimbing, double extensionInches, DoubleSupplier ff) {}
+    public default void setArmExtensionIn(boolean isClimbing, double extensionInches, DoubleSupplier ff) {}
 }

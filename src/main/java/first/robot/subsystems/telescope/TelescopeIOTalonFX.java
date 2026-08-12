@@ -31,13 +31,8 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
     protected final PearadoxTalonFX arm1;
     protected final PearadoxTalonFX arm2;
 
-    protected final MotionMagicDutyCycle pivotMMDutyCycle;
-    protected final MotionMagicDutyCycle armMMDutyCycle;
-
-    protected final Follower pivot2Follow1;
-    protected final Follower pivot3Follow1;
-
-    protected final Follower arm2Follow1;
+    protected final MotionMagicDutyCycle mmDutyCycle;
+    protected final Follower follower;
 
     public TelescopeIOTalonFX() {
         pivot1 = new PearadoxTalonFX(PivotConstants.PIVOT_1_ID,
@@ -65,16 +60,21 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
 
         
         // setting up control modes
-        pivotMMDutyCycle = new MotionMagicDutyCycle(0);
-        armMMDutyCycle = new MotionMagicDutyCycle(0);
+        mmDutyCycle = new MotionMagicDutyCycle(0);
+        follower = new Follower(0, null);
 
-        pivot2Follow1 = new Follower(pivot1.getDeviceID(), MotorAlignmentValue.Opposed);
-        pivot2.setControl(pivot2Follow1);
-        pivot3Follow1 = new Follower(pivot1.getDeviceID(), MotorAlignmentValue.Aligned);
-        pivot3.setControl(pivot3Follow1);
+        pivot2.setControl(follower.withLeaderID(PivotConstants.PIVOT_1_ID).withMotorAlignment(MotorAlignmentValue.Opposed));
+        pivot3.setControl(follower.withMotorAlignment(MotorAlignmentValue.Aligned));
 
-        arm2Follow1 = new Follower(arm1.getDeviceID(), MotorAlignmentValue.Opposed);
-        arm2.setControl(arm2Follow1);
+        arm2.setControl(follower.withLeaderID(ArmConstants.ARM_1_ID).withMotorAlignment(MotorAlignmentValue.Opposed));
+
+        syncMotorsWithEncoder();
+    }
+
+    protected void syncMotorsWithEncoder() {
+        PhoenixUtil.tryUntilOk(5, () -> pivot1.setPosition(absoluteEncoder.getAbsolutePosition().getValueAsDouble() * PivotConstants.REDUCTION));
+        PhoenixUtil.tryUntilOk(5, () -> pivot2.setPosition(-absoluteEncoder.getAbsolutePosition().getValueAsDouble() * PivotConstants.REDUCTION));
+        PhoenixUtil.tryUntilOk(5, () -> pivot3.setPosition(absoluteEncoder.getAbsolutePosition().getValueAsDouble() * PivotConstants.REDUCTION));
     }
 
     public void updateInputs(TelescopeIOInputs inputs) {
@@ -88,26 +88,26 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
         inputs.arm2Data = arm2.getData();
     }
 
-    public void setPivotAngle(double angleDeg) {
+    public void setPivotAngleDeg(double angleDeg) {
         double motorSetpoint = Units.degreesToRotations(angleDeg) * PivotConstants.REDUCTION;
-        pivot1.setControl(pivotMMDutyCycle.withPosition(motorSetpoint));
+        pivot1.setControl(mmDutyCycle.withPosition(motorSetpoint));
     }
 
-    public void setPivotAngle(double angleDeg, DoubleSupplier ff) {
+    public void setPivotAngleDeg(double angleDeg, DoubleSupplier ff) {
         double motorSetpoint = Units.degreesToRotations(angleDeg) * PivotConstants.REDUCTION;
-        pivot1.setControl(pivotMMDutyCycle.withPosition(motorSetpoint).withFeedForward(ff.getAsDouble()));
+        pivot1.setControl(mmDutyCycle.withPosition(motorSetpoint).withFeedForward(ff.getAsDouble()));
     }
 
-    public void setArmExtension(boolean isClimbing, double extensionInches) {
-        double motorSetpoint = Units.inchesToMeters(extensionInches) * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS
+    public void setArmExtensionIn(boolean isClimbing, double extensionInches) {
+        double motorSetpoint = (Units.inchesToMeters(extensionInches) / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS)
                 * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION);
-        arm1.setControl(armMMDutyCycle.withPosition(motorSetpoint));
+        arm1.setControl(mmDutyCycle.withPosition(motorSetpoint));
     }
 
-    public void setArmExtension(boolean isClimbing, double extensionInches, DoubleSupplier ff) {
-        double motorSetpoint = Units.inchesToMeters(extensionInches) * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS
+    public void setArmExtensionIn(boolean isClimbing, double extensionInches, DoubleSupplier ff) {
+        double motorSetpoint = (Units.inchesToMeters(extensionInches) / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS)
                  * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION);
-            arm1.setControl(armMMDutyCycle.withPosition(motorSetpoint).withFeedForward(ff.getAsDouble()));
+            arm1.setControl(mmDutyCycle.withPosition(motorSetpoint).withFeedForward(ff.getAsDouble()));
     }
 
 }

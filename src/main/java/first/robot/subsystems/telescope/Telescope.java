@@ -9,7 +9,6 @@ import org.littletonrobotics.junction.Logger;
 import org.wpilib.command3.Command;
 import org.wpilib.command3.Mechanism;
 import org.wpilib.math.util.Units;
-import org.wpilib.smartdashboard.SmartDashboard;
 
 import first.robot.subsystems.telescope.TelescopeConstants.ArmConstants;
 import first.robot.subsystems.telescope.TelescopeConstants.PivotConstants;
@@ -20,8 +19,9 @@ public class Telescope extends Mechanism {
 
     private final TelescopeIOInputsAutoLogged inputs = new TelescopeIOInputsAutoLogged();
 
+    @AutoLogOutput(key="Mechanisms/Telescope/State")
     private TelescopeStates state = TelescopeStates.HOME;
-    private double customSetpoint = 0.0;
+    private double setpoint = 0.0;
 
     /** Creates a new Telescope. */
     public Telescope(TelescopeIO io) {
@@ -30,14 +30,12 @@ public class Telescope extends Mechanism {
 
     public void logIO() {
         io.updateInputs(inputs);
-        SmartDashboard.putString("Mechanisms/Telescope/State", state.name());
-        SmartDashboard.putNumber("Mechanisms/Telescope/Pivot/Setpoint Angle Deg", (state == TelescopeStates.LAUNCHER ? customSetpoint : state.getPivotAngleDeg()));
-        SmartDashboard.putNumber("Mechanisms/Telescope/Pivot/Angle Deg", getPivotAngleDeg());
-        SmartDashboard.putNumber("Mechanisms/Telescope/Pivot/Abs Encoder Angle Deg", Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition));
-        SmartDashboard.putNumber("Mechanisms/Telescope/Arm/Extension Inches", getArmExtensionInches());
-        SmartDashboard.putNumber("Mechanisms/Telescope/Arm/Setpoint Extension Inches", state.getArmExtensionInches());
+        Logger.recordOutput("Mechanisms/Telescope/Pivot/Setpoint Angle Deg", (state == TelescopeStates.LAUNCHER ? setpoint : state.getPivotAngleDeg()));
+        Logger.recordOutput("Mechanisms/Telescope/Pivot/Angle Deg", getPivotAngleDeg());
+        Logger.recordOutput("Mechanisms/Telescope/Pivot/Abs Encoder Angle Deg", Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition));
+        Logger.recordOutput("Mechanisms/Telescope/Arm/Extension Inches", getArmExtensionInches());
+        Logger.recordOutput("Mechanisms/Telescope/Arm/Setpoint Extension Inches", state.getArmExtensionInches());
         Logger.processInputs("Telescope", inputs);
-        // TODO: see when logger starts working
     }
 
     public Command applyState(TelescopeStates state) {
@@ -48,12 +46,12 @@ public class Telescope extends Mechanism {
                 while(Math.abs((state.getPivotAngleDeg() - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / state.getPivotAngleDeg()) > 0.05){
                         // && Math.abs((state.getArmExtensionInches() - getArmExtensionInches()) / state.getArmExtensionInches()) > 0.05) {
                     // functions as a timer, cmd gives up control when it's close to its setpoint
-                    io.setPivotAngle(state.getPivotAngleDeg());
-                    io.setArmExtension(state==TelescopeStates.CLUMB, state.getArmExtensionInches());
+                    io.setPivotAngleDeg(state.getPivotAngleDeg());
+                    io.setArmExtensionIn(state==TelescopeStates.CLUMB, state.getArmExtensionInches());
                     co.yield();
                 }
             }
-        }).named("APPLY STATE " + state.name());
+        }).named("TELE " + state.name());
     }
 
     public TelescopeStates getState() {
@@ -63,10 +61,10 @@ public class Telescope extends Mechanism {
     public Command setPivotAngleDeg(double angleDeg) {
         // if (telescopeState != TelescopeStates.LAUNCHER) return Command.noRequirements(co -> {}).named("NOT LAUNCHING");
             return run(co -> {
-                customSetpoint = angleDeg;
-            while(Math.abs((customSetpoint - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / customSetpoint) > 0.01) {
+                setpoint = angleDeg;
+            while(Math.abs((setpoint - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / setpoint) > 0.01) {
                 // functions as a timer, cmd gives up control when it's close to its setpoint
-                io.setPivotAngle(customSetpoint);
+                io.setPivotAngleDeg(setpoint);
                 co.yield();
             }
         }).named("PIVOT ANGLE " + angleDeg);
@@ -75,26 +73,19 @@ public class Telescope extends Mechanism {
     public double getPivotAngleDeg() {
         return Units.rotationsToDegrees(mean(
             inputs.pivot1Data.position(),
-            -1 * inputs.pivot2Data.position(), // because this one follows in the opposed direction
+            -inputs.pivot2Data.position(), // because this one follows in the opposed direction
             inputs.pivot3Data.position())
-            / PivotConstants.REDUCTION);
+            / PivotConstants.REDUCTION
+        );
     }
 
     public double getArmExtensionInches() {
-        switch(state) {
-            case CLUMB:
-                return (mean(
-                inputs.arm1Data.position(),
-                inputs.arm2Data.position())
-                / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS // TODO: remember how you got this number
-                / ArmConstants.CLIMB_REDUCTION);
-            default:
-                return (mean(
-                    inputs.arm1Data.position(),
-                    inputs.arm2Data.position())
-                / ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS
-                / ArmConstants.EXTENSION_REDUCTION);
-        }
+        return (mean(
+            inputs.arm1Data.position(),
+            -inputs.arm2Data.position()) // because this one follows in the opposed direction
+            / ArmConstants.EXTENSION_REDUCTION
+            * ArmConstants.EXTENSION_ROTOR_CIRCUMF_METERS
+        );
     }
 
     private double mean(double... values) {
