@@ -56,7 +56,7 @@ public class CommandFactory {
         return Command.requiring(telescope, launcher, endEffector).executing(co -> {
             co.fork(instantApplyState(SuperstructureStates.LAUNCHER));
             co.awaitAll(
-                telescope.setPivotAngleDeg(20),
+                telescope.setPivotAngleDeg(50),
                 launcher.setLauncherRPS(60)
             );
             co.await(pause(1));

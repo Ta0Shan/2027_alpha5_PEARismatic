@@ -77,7 +77,7 @@ public class TelescopeConstants {
 
             return config;
         }
-        public static final double STARTING_ANGLE_DEG = 60.0;
+        public static final double STARTING_ANGLE_DEG = 30.0;
         
         public static final int CANCODER_ID = 24;
         public static final double CANCODER_OFFSET = 0.0;

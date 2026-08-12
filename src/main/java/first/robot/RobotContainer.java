@@ -11,6 +11,7 @@ import org.wpilib.smartdashboard.SmartDashboard;
 
 import first.robot.commands.BigStateMachine;
 import first.robot.commands.CommandFactory;
+import first.robot.subsystems.MechVisualizer;
 import first.robot.subsystems.endEffector.EE;
 import first.robot.subsystems.endEffector.EEIOReal;
 import first.robot.subsystems.endEffector.EEIOSim;
@@ -37,6 +38,8 @@ public class RobotContainer {
   private final BigStateMachine statemachine;
   private final CommandFactory commandFactory;
 
+  private final MechVisualizer visualizer2d;
+
   public RobotContainer() {
     driver = new CommandNiDsXboxController(0);
 
@@ -49,23 +52,24 @@ public class RobotContainer {
     // vision = new Vision();
 
 
-    {// configuring state machine
+    // configuring state machine
 
-      commandFactory = new CommandFactory(telescope, launcher, endEffector);
+    commandFactory = new CommandFactory(telescope, launcher, endEffector);
 
-      statemachine = new BigStateMachine(
-        commandFactory,
-        driver.start(), // start
-        driver.a(), // TODO: left bumper
-        driver.leftTrigger(0.9), // left trigger
-        driver.x(), // x
-        driver.y(), // y
-        driver.povRight(), // TODO: a
-        driver.povUp(), // povUp
-        driver.b(), // TODO: right bumper
-        driver.rightTrigger(0.9) // right trigger
-      );
-    }
+    statemachine = new BigStateMachine(
+      commandFactory,
+      driver.start(), // start
+      driver.a(), // TODO: left bumper
+      driver.leftTrigger(0.9), // left trigger
+      driver.x(), // x
+      driver.y(), // y
+      driver.povRight(), // TODO: a
+      driver.povUp(), // povUp
+      driver.b(), // TODO: right bumper
+      driver.rightTrigger(0.9) // right trigger
+    );
+  
+    visualizer2d = new MechVisualizer(telescope, launcher, endEffector);
 
     setUpAutonomousCommand();
   }
@@ -73,7 +77,7 @@ public class RobotContainer {
   public void setUpAutonomousCommand() {
     // autoChooser.addOption("Auto Name", new PathPlannerAuto("Auto Nickname", bool inversion));
 
-    SmartDashboard.putData("Commands/Autonomous", autoChooser);
+    SmartDashboard.putData("Autonomous Command", autoChooser);
   }
 
   public Command getAutonomousCommand() {
@@ -89,6 +93,7 @@ public class RobotContainer {
     launcher.logIO();
     endEffector.logIO();
     statemachine.logData();
+    visualizer2d.updateVis();
     PhoenixUtil.refreshAll();
   }
 

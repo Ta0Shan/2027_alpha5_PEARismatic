@@ -30,7 +30,7 @@ public class EE extends Mechanism {
             Logger.recordOutput("Mechanisms/End Effector/Wrist/Angle Deg", getWristAngleDeg());
             Logger.recordOutput("Mechanisms/End Effector/Wrist/Setpoint Deg", wristState.getAngleDeg());
             Logger.recordOutput("Mechanisms/End Effector/Rollers/Voltage Setpoint", rollerState.getVoltage());
-            Logger.recordOutput("Mechanisms/End Effector/Rollers/RPS", inputs.rollerData.velocity() / EEConstants.ROLLER_REDUCTION);
+            Logger.recordOutput("Mechanisms/End Effector/Rollers/RPS", getRollersRPS());
     }
 
     public Command applyState(WristStates wristState, RollerStates rollerState) {
@@ -63,5 +63,9 @@ public class EE extends Mechanism {
 
     public double getWristAngleDeg() {
         return Units.rotationsToDegrees(inputs.wristData.position()) / EEConstants.WRIST_REDUCTION;
+    }
+
+    public double getRollersRPS() {
+        return inputs.rollerData.velocity() / EEConstants.ROLLER_REDUCTION;
     }
 }

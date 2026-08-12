@@ -14,12 +14,13 @@ public class EEConstants {
     public static enum WristStates {
         STOWED(0),
         DEPLOYED(201),
-        L1_FRONT(126),
+        L1_FRONT(166),
         L1_BACK(49),
-        L2_FRONT(126),
+        L2_FRONT(166),
         L2_BACK(88),
         CLASSIFIER_FRONT(177),
-        CLASSIFIER_BACK(66);
+        CLASSIFIER_BACK(66)
+        ;
 
         private final double angleFromArmDeg;
 
@@ -93,7 +94,10 @@ public class EEConstants {
 
         return config;
     }
-    public static final double LENGTH_METERS = Units.inchesToMeters(12.689063);
+    public static final double LENGTH_METERS = Units.inchesToMeters(8); // TODO
     public static final double MASS_KG = Units.lbsToKilograms(10); // some parts don't have defined weight, +0.3 lbs to be safe
+
+    // excuse the jank constant its for sim
+    public static final double STARTING_ANGLE_OFFSET_FROM_PARALLEL_DEG = 146.0;
 
 }

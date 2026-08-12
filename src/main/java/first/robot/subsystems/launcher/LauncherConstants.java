@@ -49,4 +49,7 @@ public class LauncherConstants {
     public static final double FLYWHEEL_MAX_SPEED_RPS = MOTOR_MAX_SPEED_RPS/REDUCTION;
 
     public static final double MASS_KG = Units.lbsToKilograms(12.2648713);
+
+    // excuse the jank constant its for sim
+    public static final double FLYWHEEL_DIST_FROM_STATIC_STAGE_METERS = Units.inchesToMeters(10.985093);
 }
