@@ -32,7 +32,7 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         0,
         Double.POSITIVE_INFINITY,
         ArmConstants.MASS_KG,
-        false
+        true
     );
 
     private final TiltedElevatorSim armPhysicsSim = new TiltedElevatorSim(
@@ -42,7 +42,7 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         ArmConstants.CARRIAGE_DRUM_RADIUS_METERS,
         0,
         ArmConstants.MAX_EXTENSION_METERS,
-        false
+        true
     );
 
     public TelescopeIOSim() {
@@ -63,16 +63,20 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         pivot1SimState.setSupplyVoltage(12);
         pivot2SimState.setSupplyVoltage(12);
         pivot3SimState.setSupplyVoltage(12);
-        pivotPhysicsSim.setInputVoltage(pivot1SimState.getMotorVoltage());
-        // pivotPhysicsSim.setInputVoltage((pivot1SimState.getMotorVoltage() + pivot2SimState.getMotorVoltage() + pivot3SimState.getMotorVoltage()) / 3);
+        // pivotPhysicsSim.setInputVoltage(pivot1SimState.getMotorVoltage());
+        pivotPhysicsSim.setInputVoltage((pivot1SimState.getMotorVoltage() + pivot2SimState.getMotorVoltage() + pivot3SimState.getMotorVoltage()) / 3);
 
         arm1SimState.setSupplyVoltage(12);
         arm2SimState.setSupplyVoltage(12);
-        armPhysicsSim.setInputVoltage(arm1SimState.getMotorVoltage());
-        // armPhysicsSim.setInputVoltage((arm1SimState.getMotorVoltage() + arm2SimState.getMotorVoltage()) / 2);
+        // armPhysicsSim.setInputVoltage(arm1SimState.getMotorVoltage());
+        armPhysicsSim.setInputVoltage((arm1SimState.getMotorVoltage() + arm2SimState.getMotorVoltage()) / 2);
 
         pivotPhysicsSim.update(Constants.UPDATE_PERIOD_SEC);
         armPhysicsSim.update(Constants.UPDATE_PERIOD_SEC);
+
+        pivotPhysicsSim.setCGRadius(estimateCGRadius(armPhysicsSim.getPosition()));
+        pivotPhysicsSim.setMOI(estimateMOI(armPhysicsSim.getPosition()));
+        armPhysicsSim.setAngleFromHorizontal(pivotPhysicsSim.getAngle());
 
         pivot1SimState.setRawRotorPosition(Units.radiansToRotations(pivotPhysicsSim.getAngle()) * PivotConstants.REDUCTION);
         pivot2SimState.setRawRotorPosition(Units.radiansToRotations(pivotPhysicsSim.getAngle()) * PivotConstants.REDUCTION);
