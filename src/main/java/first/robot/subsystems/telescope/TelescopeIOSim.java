@@ -102,7 +102,7 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
 
     private double estimateMOI(double extensionLength) {
         // parallel axis theorem: I_cm + Md^2
-        double carriageMOI = ArmConstants.CARRIAGE_INIT_MOI + 
+        double carriageMOI = ArmConstants.CARRIAGE_BASE_MOI + 
                 ArmConstants.CARRIAGE_MASS_KG * Math.pow(extensionLength + (ArmConstants.CARRIAGE_LENGTH_METERS/2), 2);
         
         // effectively a point mass: mr^2

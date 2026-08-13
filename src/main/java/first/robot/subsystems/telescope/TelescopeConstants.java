@@ -20,7 +20,7 @@ import first.robot.subsystems.launcher.LauncherConstants;
 /** Add your docs here. */
 public class TelescopeConstants {
 
-    public static final CANBus CAN_BUS = Constants.CAN_BUS;
+    public static final CANBus CAN_BUS = Constants.SUPERSTRUCTURE_CAN_BUS;
 
     public static enum TelescopeStates {
         HOME(PivotConstants.STARTING_ANGLE_DEG, 0.), // 0 deg
@@ -141,7 +141,7 @@ public class TelescopeConstants {
 
 
         public static final double STATIC_STAGE_MOI = (1./3.) * STATIC_STAGE_MASS_KG * Math.pow(STATIC_STAGE_LENGTH_METERS/2, 2);
-        public static final double CARRIAGE_INIT_MOI = (1./3.) * CARRIAGE_MASS_KG * Math.pow(CARRIAGE_LENGTH_METERS/2, 2);
+        public static final double CARRIAGE_BASE_MOI = (1./12.) * CARRIAGE_MASS_KG * Math.pow(CARRIAGE_LENGTH_METERS/2, 2);
 
     }
 

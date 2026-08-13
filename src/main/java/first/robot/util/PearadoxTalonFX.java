@@ -55,18 +55,7 @@ public class PearadoxTalonFX extends TalonFX {
     this.subsystem = subsystem;
   }
 
-  /**
-   * Constructs a new PearadoxTalonFX with the specified device ID and configuration.
-   * <p> This device will be on the default CAN Bus as listed in Constants.
-   *
-   * @param deviceId CAN device ID for the TalonFX
-   * @param config TalonFXConfiguration to apply
-   * @param subsystem the subsystem that this device is a part of
-   */
-  public PearadoxTalonFX(int deviceId, TalonFXConfiguration config, Subsystem subsystem) {
-    this(deviceId, Constants.CAN_BUS, config, subsystem);
-  }
-  
+
     /**
      * Constructs a new PearadoxTalonFX with the specified device ID and configuration.
      * <p> The energy consumption of this device will not be logged under a specific subsystem.
@@ -79,17 +68,6 @@ public class PearadoxTalonFX extends TalonFX {
       this(deviceId, canBus, config, Subsystem.UNASSIGNED);
     }
 
-  /**
-   * Constructs a new PearadoxTalonFX with the specified device ID and configuration.
-   * <p> This device will be on the default CAN Bus as listed in Constants.
-   * <p> The energy consumption of this device will not be logged under a specific subsystem.
-   * 
-   * @param deviceId CAN device ID for the TalonFX
-   * @param config TalonFXConfiguration to apply
-   */
-  public PearadoxTalonFX(int deviceId, TalonFXConfiguration config) {
-    this(deviceId, Constants.CAN_BUS, config, Subsystem.UNASSIGNED);
-  }
 
   /**
    * Applies the given configuration to this motor controller, retrying up to 5 times in case of

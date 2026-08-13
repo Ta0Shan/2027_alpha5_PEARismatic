@@ -9,16 +9,29 @@ import org.wpilib.command3.button.CommandNiDsXboxController;
 import org.wpilib.smartdashboard.SendableChooser;
 import org.wpilib.smartdashboard.SmartDashboard;
 
+import first.robot.Constants.Mode;
 import first.robot.commands.BigStateMachine;
-import first.robot.commands.CommandFactory;
+import first.robot.commands.SuperstructureCommands;
+import first.robot.commands.DriveCommands;
+import first.robot.generated.TunerConstants;
 import first.robot.subsystems.MechVisualizer;
+import first.robot.subsystems.drive.Drive;
+import first.robot.subsystems.drive.GyroIO;
+import first.robot.subsystems.drive.GyroIOPigeon2;
+import first.robot.subsystems.drive.ModuleIO;
+import first.robot.subsystems.drive.ModuleIOSim;
+import first.robot.subsystems.drive.ModuleIOTalonFX;
 import first.robot.subsystems.endEffector.EE;
+import first.robot.subsystems.endEffector.EEIO;
 import first.robot.subsystems.endEffector.EEIOReal;
 import first.robot.subsystems.endEffector.EEIOSim;
 import first.robot.subsystems.launcher.Launcher;
+import first.robot.subsystems.launcher.LauncherIO;
 import first.robot.subsystems.launcher.LauncherIOReal;
 import first.robot.subsystems.launcher.LauncherIOSim;
 import first.robot.subsystems.telescope.Telescope;
+import first.robot.subsystems.telescope.TelescopeIO;
+import first.robot.subsystems.telescope.TelescopeIOReal;
 import first.robot.subsystems.telescope.TelescopeIOSim;
 import first.robot.subsystems.vision.Vision;
 import first.robot.util.PhoenixUtil;
@@ -29,6 +42,8 @@ public class RobotContainer {
 
   private final SendableChooser<Command> autoChooser;
 
+  private final Drive drive;
+
   private final Telescope telescope;
   private final Launcher launcher;
   private final EE endEffector;
@@ -36,7 +51,8 @@ public class RobotContainer {
   // private final Vision vision;
 
   private final BigStateMachine statemachine;
-  private final CommandFactory commandFactory;
+  private final SuperstructureCommands superstructureCommands;
+  private final DriveCommands driveCommands;
 
   private final MechVisualizer visualizer2d;
 
@@ -45,28 +61,70 @@ public class RobotContainer {
 
     autoChooser = new SendableChooser<>();
 
-    telescope = new Telescope(new TelescopeIOSim());
-    endEffector = new EE(new EEIOSim());
-    launcher = new Launcher(new LauncherIOSim());
-
-    // vision = new Vision();
+    switch(Constants.currentMode) {
+      case REAL:
+        // Real robot, instantiate hardware IO implementations
+        drive = new Drive(
+          new GyroIOPigeon2(),
+          new ModuleIOTalonFX(TunerConstants.FrontLeft),
+          new ModuleIOTalonFX(TunerConstants.FrontRight),
+          new ModuleIOTalonFX(TunerConstants.BackLeft),
+          new ModuleIOTalonFX(TunerConstants.BackRight)
+        );
+        telescope = new Telescope(new TelescopeIOReal());
+        endEffector = new EE(new EEIOReal());
+        launcher = new Launcher(new LauncherIOReal());
+        break;
+      case SIM:
+        // Sim robot, instantiate physics sim IO implementations
+        
+        drive = new Drive(
+          new GyroIO() {},
+          new ModuleIOSim(TunerConstants.FrontLeft),
+          new ModuleIOSim(TunerConstants.FrontRight),
+          new ModuleIOSim(TunerConstants.BackLeft),
+          new ModuleIOSim(TunerConstants.BackRight)
+        );
+        telescope = new Telescope(new TelescopeIOSim());
+        endEffector = new EE(new EEIOSim());
+        launcher = new Launcher(new LauncherIOSim());
+        break;
+      default:
+        // Replayed robot, disable IO implementations
+        drive = new Drive(
+          new GyroIO() {},
+          new ModuleIO() {},
+          new ModuleIO() {},
+          new ModuleIO() {},
+          new ModuleIO() {}
+        );
+        telescope = new Telescope(new TelescopeIO() {});
+        endEffector = new EE(new EEIO() {});
+        launcher = new Launcher(new LauncherIO() {});
+        break;
+    }
 
 
     // configuring state machine
 
-    commandFactory = new CommandFactory(telescope, launcher, endEffector);
+    superstructureCommands = new SuperstructureCommands(telescope, launcher, endEffector);
+    driveCommands = new DriveCommands(drive);
 
     statemachine = new BigStateMachine(
-      commandFactory,
-      driver.start(), // start
-      driver.a(), // TODO: left bumper
-      driver.leftTrigger(0.9), // left trigger
-      driver.x(), // x
-      driver.y(), // y
-      driver.povRight(), // TODO: a
-      driver.povUp(), // povUp
-      driver.b(), // TODO: right bumper
-      driver.rightTrigger(0.9) // right trigger
+      superstructureCommands,
+      driveCommands,
+      () -> driver.getLeftX(),
+      () -> driver.getLeftY(),
+      () -> driver.getRightX(),
+      driver.start(),
+      driver.leftBumper(),
+      driver.leftTrigger(0.9),
+      driver.x(),
+      driver.y(),
+      driver.a(),
+      driver.povUp(),
+      driver.rightBumper(),
+      driver.rightTrigger(0.9)
     );
   
     visualizer2d = new MechVisualizer(telescope, launcher, endEffector);
@@ -89,11 +147,12 @@ public class RobotContainer {
   }
 
   public void periodic() {
+    drive.periodic();
     telescope.logIO();
     launcher.logIO();
     endEffector.logIO();
     statemachine.logData();
-    visualizer2d.updateVis();
+    if (Constants.currentMode!=Mode.REAL) visualizer2d.updateVis();
     PhoenixUtil.refreshAll();
   }
 

@@ -1,5 +1,7 @@
 package first.robot;
 
+import org.wpilib.framework.RobotBase; // RobotBase throws an error for some reason ill have to look into it
+
 import com.ctre.phoenix6.CANBus;
 
 import first.robot.subsystems.endEffector.EEConstants.RollerStates;
@@ -7,7 +9,19 @@ import first.robot.subsystems.endEffector.EEConstants.WristStates;
 import first.robot.subsystems.telescope.TelescopeConstants.TelescopeStates;
 
 public class Constants {
-    public static final CANBus CAN_BUS = new CANBus("bus");
+
+    public enum Mode {
+        REAL,
+        SIM,
+        REPLAY
+    }
+
+    public static final Mode simMode = Mode.SIM;
+
+    // public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+    public static final Mode currentMode = simMode;
+
+    public static final CANBus SUPERSTRUCTURE_CAN_BUS = new CANBus("structure");
     public static final double UPDATE_FREQ_HZ = 50;
     public static final double UPDATE_PERIOD_SEC = 1 / UPDATE_FREQ_HZ;
 

@@ -11,7 +11,7 @@ import first.robot.Constants;
 
 public class LauncherConstants {
 
-    public static final CANBus CAN_BUS = Constants.CAN_BUS;
+    public static final CANBus CAN_BUS = Constants.SUPERSTRUCTURE_CAN_BUS;
 
     public static final int LAUNCHER_1_ID = 41;
     public static final int LAUNCHER_2_ID = 42;

@@ -36,25 +36,30 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
 
     public TelescopeIOTalonFX() {
         pivot1 = new PearadoxTalonFX(PivotConstants.PIVOT_1_ID,
+            Constants.SUPERSTRUCTURE_CAN_BUS,
             PivotConstants.PIVOT_CONFIG(),
             Subsystem.TELESCOPE_PIVOT);
-
+            
         pivot2 = new PearadoxTalonFX(PivotConstants.PIVOT_2_ID,
+            Constants.SUPERSTRUCTURE_CAN_BUS,
             PivotConstants.PIVOT_CONFIG(),
             Subsystem.TELESCOPE_PIVOT);
 
         pivot3 = new PearadoxTalonFX(PivotConstants.PIVOT_3_ID,
+            Constants.SUPERSTRUCTURE_CAN_BUS,
             PivotConstants.PIVOT_CONFIG(),
             Subsystem.TELESCOPE_PIVOT);
 
-        absoluteEncoder = new CANcoder(PivotConstants.CANCODER_ID, Constants.CAN_BUS);
+        absoluteEncoder = new CANcoder(PivotConstants.CANCODER_ID, Constants.SUPERSTRUCTURE_CAN_BUS);
         PhoenixUtil.tryUntilOk(5, () -> absoluteEncoder.getConfigurator().apply(PivotConstants.CANCODER_CONFIG()));
 
         arm1 = new PearadoxTalonFX(ArmConstants.ARM_1_ID,
+            Constants.SUPERSTRUCTURE_CAN_BUS,
             ArmConstants.CONFIG(),
             Subsystem.TELESCOPE_EXTENSION);
 
         arm2 = new PearadoxTalonFX(ArmConstants.ARM_2_ID,
+            Constants.SUPERSTRUCTURE_CAN_BUS,
             ArmConstants.CONFIG(),
             Subsystem.TELESCOPE_EXTENSION);
 

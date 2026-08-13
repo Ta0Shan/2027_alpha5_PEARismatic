@@ -5,7 +5,9 @@ import org.wpilib.math.util.Units;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 
+import first.robot.Constants;
 import first.robot.util.PearadoxTalonFX;
+import first.robot.util.EnergyTracker.Subsystem;
 
 public abstract class EEIOTalonFX implements EEIO {
     protected final PearadoxTalonFX wrist;
@@ -15,8 +17,14 @@ public abstract class EEIOTalonFX implements EEIO {
     protected final VoltageOut rollerVoltageOut;
 
     public EEIOTalonFX() {
-        wrist = new PearadoxTalonFX(EEConstants.WRIST_ID, EEConstants.WRIST_CONFIG());
-        roller = new PearadoxTalonFX(EEConstants.ROLLERS_ID, EEConstants.ROLLER_CONFIG());
+        wrist = new PearadoxTalonFX(EEConstants.WRIST_ID,
+            Constants.SUPERSTRUCTURE_CAN_BUS,
+            EEConstants.WRIST_CONFIG(),
+            Subsystem.EE_WRIST);
+        roller = new PearadoxTalonFX(EEConstants.ROLLERS_ID,
+            Constants.SUPERSTRUCTURE_CAN_BUS,
+            EEConstants.ROLLER_CONFIG(),
+            Subsystem.EE_ROLLERS);
 
         wristPositionVoltage = new PositionVoltage(0);
         rollerVoltageOut = new VoltageOut(0);

@@ -13,7 +13,7 @@ public class EnergyTracker {
     STEER,
     TELESCOPE_PIVOT,
     TELESCOPE_EXTENSION,
-    EE_PIVOT,
+    EE_WRIST,
     EE_ROLLERS,
     LAUNCHER,
     UNASSIGNED

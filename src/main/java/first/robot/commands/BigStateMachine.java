@@ -4,7 +4,10 @@
 
 package first.robot.commands;
 
+import java.util.function.DoubleSupplier;
+
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.command3.Command;
 import org.wpilib.command3.StateMachine;
 import org.wpilib.command3.StateMachine.State;
 
@@ -15,9 +18,15 @@ import first.robot.Constants.SuperstructureStates;
 /** Add your docs here. */
 public class BigStateMachine {
 
-    private final CommandFactory factory;
+    private final SuperstructureCommands superstructure;
+    private final DriveCommands drivetrain;
 
     // Button triggers
+
+    private final DoubleSupplier throttleXSupplier;
+    private final DoubleSupplier throttleYSupplier;
+    private final DoubleSupplier twistSupplier;
+
     private final Trigger homeTrigger;
     private final Trigger intakeTrigger;
     private final Trigger outtakeTrigger;
@@ -32,26 +41,35 @@ public class BigStateMachine {
     // Robot State Triggers
     private Trigger isFront;
 
-    public BigStateMachine(CommandFactory commandFactory,
+    public BigStateMachine(SuperstructureCommands superstructureCommands,
+                            DriveCommands driveCommands,
+                            DoubleSupplier throttleX,
+                            DoubleSupplier throttleY,
+                            DoubleSupplier twist,
                             Trigger home, 
                             Trigger intake,
                             Trigger outtake,
                             Trigger goToL1, 
                             Trigger goToL2, 
+                            Trigger goToClassifier, 
                             Trigger goToClimb, 
-                            Trigger classifier, 
                             Trigger primaryScore,
                             Trigger secondaryScore
                             ) {
 
-        factory = commandFactory;
+        superstructure = superstructureCommands;
+        drivetrain = driveCommands;
+
+        throttleXSupplier = throttleX;
+        throttleYSupplier = throttleY;
+        twistSupplier = twist;
 
         homeTrigger = home;
         intakeTrigger = intake;
         outtakeTrigger = outtake;
         L1Trigger = goToL1;
         L2Trigger = goToL2;
-        classifierTrigger = classifier;
+        classifierTrigger = goToClassifier;
         climbTrigger = goToClimb;
         primaryScoreTrigger = primaryScore;
         secondaryScoreTrigger = secondaryScore;
@@ -64,26 +82,32 @@ public class BigStateMachine {
             StateMachine stateMachine = new StateMachine("STATE MACHINE");
 
             // mechanism states / starters
-            State HOME = stateMachine.addState(factory.applyState(SuperstructureStates.HOME)); // resting state
-            State INTAKING = stateMachine.addState(factory.applyState(SuperstructureStates.INTAKING)); // arm down, intaking
-            State OUTTAKING = stateMachine.addState(factory.applyState(SuperstructureStates.OUTTAKING)); // arm down, outtaking
-            State L1_FRONT = stateMachine.addState(factory.applyState(SuperstructureStates.L1_FRONT)); // arm up forwards, prepped for L1
-            State L1_BACK = stateMachine.addState(factory.applyState(SuperstructureStates.L1_BACK)); // arm up backwards, prepped for L1
-            State L2_FRONT = stateMachine.addState(factory.applyState(SuperstructureStates.L2_FRONT)); // arm up forwards, prepped for L2
-            State L2_BACK = stateMachine.addState(factory.applyState(SuperstructureStates.L2_BACK)); // arm up backwards, prepped for L2
-            State CLASSIFIER_FRONT = stateMachine.addState(factory.applyState(SuperstructureStates.CLASSIFIER_FRONT)); // arm up forwards, prepped for lower classifier
-            State CLASSIFIER_BACK = stateMachine.addState(factory.applyState(SuperstructureStates.CLASSIFIER_BACK)); // arm up backwards, prepped for upper classifier
-            State CLIMB_RAISED = stateMachine.addState(factory.applyState(SuperstructureStates.CLIMB_RAISED)); // arm up 90, prepped for climb
-            State IDLING = stateMachine.addState(factory.hold());
+            State HOME = stateMachine.addState(Command.parallel(
+                superstructure.applyState(SuperstructureStates.HOME),
+                drivetrain.joystickDrive(throttleXSupplier, throttleYSupplier, twistSupplier))
+                .withAutomaticName()); // resting state
+            State INTAKING = stateMachine.addState(superstructure.applyState(SuperstructureStates.INTAKING)); // arm down, intaking
+            State OUTTAKING = stateMachine.addState(superstructure.applyState(SuperstructureStates.OUTTAKING)); // arm down, outtaking
+            State L1_FRONT = stateMachine.addState(superstructure.applyState(SuperstructureStates.L1_FRONT)); // arm up forwards, prepped for L1
+            State L1_BACK = stateMachine.addState(superstructure.applyState(SuperstructureStates.L1_BACK)); // arm up backwards, prepped for L1
+            State L2_FRONT = stateMachine.addState(superstructure.applyState(SuperstructureStates.L2_FRONT)); // arm up forwards, prepped for L2
+            State L2_BACK = stateMachine.addState(superstructure.applyState(SuperstructureStates.L2_BACK)); // arm up backwards, prepped for L2
+            State CLASSIFIER_FRONT = stateMachine.addState(superstructure.applyState(SuperstructureStates.CLASSIFIER_FRONT)); // arm up forwards, prepped for lower classifier
+            State CLASSIFIER_BACK = stateMachine.addState(superstructure.applyState(SuperstructureStates.CLASSIFIER_BACK)); // arm up backwards, prepped for upper classifier
+            State CLIMB_RAISED = stateMachine.addState(superstructure.applyState(SuperstructureStates.CLIMB_RAISED)); // arm up 90, prepped for climb
+            State IDLING = stateMachine.addState(Command.parallel(
+                superstructure.hold(),
+                drivetrain.joystickDrive(throttleXSupplier, throttleYSupplier, twistSupplier))
+                .withAutomaticName());
 
             // alignment states / in-betweens
-            State SHUTTLE = stateMachine.addState(factory.shuttle()); // TODO: pose when akit and drive works
-            State COLORED = stateMachine.addState(factory.coloredAlign()); // TODO: ditto ^^^
-            State NEUTRAL = stateMachine.addState(factory.neutralAlign()); // TODO: ditto ^^^
+            State SHUTTLE = stateMachine.addState(superstructure.shuttle()); // TODO: pose when akit and drive works
+            State COLORED = stateMachine.addState(superstructure.coloredAlign()); // TODO: ditto ^^^
+            State NEUTRAL = stateMachine.addState(superstructure.neutralAlign()); // TODO: ditto ^^^
 
             // scoring states / finals
-            State SCORE = stateMachine.addState(factory.score());
-            State CLIMB = stateMachine.addState(factory.climb());
+            State SCORE = stateMachine.addState(superstructure.score());
+            State CLIMB = stateMachine.addState(superstructure.climb());
 
         // Binding Triggers
             // we will always go to HOME when homeTrigger is triggered
@@ -151,8 +175,8 @@ public class BigStateMachine {
     }
 
     public void logData() {
-        Logger.recordOutput("Mechanisms/Superstructure State", factory.getSuperstructureState().name());
-        Logger.recordOutput("Mechanisms/End Effector/Wrist/Angle From Floor Deg", factory.getEEAngleFromFloorDeg());
+        Logger.recordOutput("Mechanisms/Superstructure State", superstructure.getSuperstructureState().name());
+        Logger.recordOutput("Mechanisms/End Effector/Wrist/Angle From Floor Deg", superstructure.getEEAngleFromFloorDeg());
     }
 
 }

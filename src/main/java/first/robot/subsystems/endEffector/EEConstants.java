@@ -49,7 +49,7 @@ public class EEConstants {
         public double getVoltage() {return voltage;}
     }
 
-    public static final CANBus CAN_BUS = Constants.CAN_BUS;
+    public static final CANBus CAN_BUS = Constants.SUPERSTRUCTURE_CAN_BUS;
 
     public static final int WRIST_ID = 51;
     public static final int ROLLERS_ID = 52;

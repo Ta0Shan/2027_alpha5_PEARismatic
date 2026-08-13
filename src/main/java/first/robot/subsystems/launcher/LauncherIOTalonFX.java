@@ -3,7 +3,9 @@ package first.robot.subsystems.launcher;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 
+import first.robot.Constants;
 import first.robot.util.PearadoxTalonFX;
+import first.robot.util.EnergyTracker.Subsystem;
 
 public abstract class LauncherIOTalonFX implements LauncherIO {
     protected final PearadoxTalonFX launcher1;
@@ -15,10 +17,14 @@ public abstract class LauncherIOTalonFX implements LauncherIO {
 
     public LauncherIOTalonFX() {
         launcher1 = new PearadoxTalonFX(LauncherConstants.LAUNCHER_1_ID,
-            LauncherConstants.CONFIG(true));
+            Constants.SUPERSTRUCTURE_CAN_BUS,
+            LauncherConstants.CONFIG(true),
+            Subsystem.LAUNCHER);
 
         launcher2 = new PearadoxTalonFX(LauncherConstants.LAUNCHER_2_ID,
-            LauncherConstants.CONFIG(false));
+            Constants.SUPERSTRUCTURE_CAN_BUS,
+            LauncherConstants.CONFIG(false),
+            Subsystem.LAUNCHER);
 
         velocityVoltage = new VelocityVoltage(0);
         coastOut = new CoastOut();
