@@ -10,11 +10,9 @@ import org.wpilib.command3.Mechanism;
 public class Launcher extends Mechanism {
     private final LauncherIO io;
 
-    @AutoLogOutput(key="Mechanisms/Launcher/Mean/RPS Target")
-    private double meanRPSTarget = 0.0;
+    @AutoLogOutput(key="Mechanisms/Launcher/Mean/RPS Target") private double meanRPSTarget = 0.0;
 
-    @AutoLogOutput(key="Mechanisms/Launcher/Error/Minimum Percent")
-    private double minimumErrorPercent = 0.0;
+    @AutoLogOutput(key="Mechanisms/Launcher/Error/Minimum Percent") private double minimumErrorPercent = 0.0;
 
     private final LauncherIOInputsAutoLogged inputs = new LauncherIOInputsAutoLogged();
 

@@ -37,6 +37,7 @@ public class PearadoxTalonFX extends TalonFX {
         new BaseStatusSignal[] {
           getPosition(false),
           getVelocity(false),
+          getAcceleration(false),
           getMotorVoltage(false),
           getSupplyCurrent(false),
           getStatorCurrent(false),
@@ -87,7 +88,7 @@ public class PearadoxTalonFX extends TalonFX {
   public MotorData getData() {
     boolean connected = BaseStatusSignal.isAllGood(telemetrySignals);
 
-    double supplyCurrent = telemetrySignals[3].getValueAsDouble();
+    double supplyCurrent = telemetrySignals[4].getValueAsDouble();
 
     double newTimestamp = RobotController.getTime();
     double deltaHours = (newTimestamp - lastTimestamp) / 3.6e9;
@@ -98,11 +99,12 @@ public class PearadoxTalonFX extends TalonFX {
     return new MotorData(
         telemetrySignals[0].getValueAsDouble(), // position
         telemetrySignals[1].getValueAsDouble(), // velocity
-        telemetrySignals[2].getValueAsDouble(), // voltage
+        telemetrySignals[2].getValueAsDouble(), // acceleration
+        telemetrySignals[3].getValueAsDouble(), // voltage
         supplyCurrent,
-        telemetrySignals[4].getValueAsDouble(), // stator current
-        telemetrySignals[5].getValueAsDouble(), // torque current
-        telemetrySignals[6].getValueAsDouble(), // temperature
+        telemetrySignals[5].getValueAsDouble(), // stator current
+        telemetrySignals[6].getValueAsDouble(), // torque current
+        telemetrySignals[7].getValueAsDouble(), // temperature
         connected);
   }
 
@@ -111,6 +113,7 @@ public class PearadoxTalonFX extends TalonFX {
    *
    * @param position Sensor position (rotations)
    * @param velocity Sensor velocity (rotations/sec)
+   * @param acceleration Sensor acceleration (rotations/sec^2) (will not work in sim)
    * @param appliedVolts Voltage applied to motor
    * @param supplyCurrent Current drawn from supply (A)
    * @param statorCurrent Current through motor windings (A)
@@ -121,6 +124,7 @@ public class PearadoxTalonFX extends TalonFX {
   public record MotorData(
       double position,
       double velocity,
+      double acceleration,
       double appliedVolts,
       double supplyCurrent,
       double statorCurrent,
@@ -129,7 +133,7 @@ public class PearadoxTalonFX extends TalonFX {
       boolean isConnected) {
 
     public MotorData() {
-      this(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false);
+      this(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false);
     }
   }
 }

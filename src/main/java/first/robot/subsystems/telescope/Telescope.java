@@ -8,6 +8,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command3.Command;
 import org.wpilib.command3.Mechanism;
+import org.wpilib.math.filter.Debouncer;
 import org.wpilib.math.util.Units;
 
 import first.robot.subsystems.telescope.TelescopeConstants.ArmConstants;
@@ -16,12 +17,11 @@ import first.robot.subsystems.telescope.TelescopeConstants.TelescopeStates;
 
 public class Telescope extends Mechanism {
     private final TelescopeIO io;
+    private final Debouncer setpointDebouncer = new Debouncer(0.15);
 
     private final TelescopeIOInputsAutoLogged inputs = new TelescopeIOInputsAutoLogged();
 
-    @AutoLogOutput(key="Mechanisms/Telescope/State")
-    private TelescopeStates state = TelescopeStates.HOME;
-    private double setpoint = 0.0;
+    @AutoLogOutput(key="Mechanisms/Telescope/State") private TelescopeStates state = TelescopeStates.HOME;
 
     /** Creates a new Telescope. */
     public Telescope(TelescopeIO io) {
@@ -31,43 +31,33 @@ public class Telescope extends Mechanism {
     public void logIO() {
         io.updateInputs(inputs);
         Logger.processInputs("Telescope", inputs);
-        Logger.recordOutput("Mechanisms/Telescope/Pivot/Setpoint Angle Deg", (state == TelescopeStates.LAUNCHER ? setpoint : state.getPivotAngleDeg()));
+        Logger.recordOutput("Mechanisms/Telescope/Pivot/Setpoint Angle Deg", state.getPivotAngleDeg());
         Logger.recordOutput("Mechanisms/Telescope/Pivot/Angle Deg", getPivotAngleDeg());
         Logger.recordOutput("Mechanisms/Telescope/Pivot/Abs Encoder Angle Deg", Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition));
+
         Logger.recordOutput("Mechanisms/Telescope/Arm/Extension Inches", getArmExtensionInches());
-        Logger.recordOutput("Mechanisms/Telescope/Arm/Setpoint Extension Inches", state.getArmExtensionInches());
+        Logger.recordOutput("Mechanisms/Telescope/Arm/Setpoint Extension Inches", getArmSetpoint(state));
+        Logger.recordOutput("Mechanisms/Telescope/Arm/Dog Shifter State", (inputs.armServoAppliedPulseWidth == ArmConstants.CLIMB_PULSE_WIDTH_uS ? "climb" : "extension"));
     }
 
     public Command applyState(TelescopeStates state) {
         return run(co -> {
             this.state = state;
-            if (state != TelescopeStates.LAUNCHER) { 
-                // to prevent conflicts when we need to schedule a launcher cmd bc that's a specific case
-                while(Math.abs((state.getPivotAngleDeg() - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / state.getPivotAngleDeg()) > 0.05
-                        || Math.abs((state.getArmExtensionInches() - getArmExtensionInches()) / state.getArmExtensionInches()) > 0.05) {
-                    // functions as a timer, cmd gives up control when it's close to its setpoint
-                    io.setPivotAngleDeg(state.getPivotAngleDeg());
-                    io.setArmExtensionIn(state==TelescopeStates.CLUMB, state.getArmExtensionInches());
-                    co.yield();
-                }
+            while(setpointDebouncer.calculate(
+                    Math.abs((state.getPivotAngleDeg() - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / state.getPivotAngleDeg()) > 0.005
+                    || Math.abs((getArmSetpoint(state) - getArmExtensionInches()) / getArmSetpoint(state)) > 0.005)
+                ) {
+                // functions as a timer, cmd gives up control when it's close to its setpoint
+                io.setPivotAngleDeg(state.getPivotAngleDeg());
+                io.setArmExtensionIn(state==TelescopeStates.CLUMB, state.getArmExtensionInches());
+                co.yield();
             }
+            io.shiftDogs(state == TelescopeStates.CLIMB_RAISED);
         }).named("TELE " + state.name());
     }
 
     public TelescopeStates getState() {
         return state;
-    }
-
-    public Command setPivotAngleDeg(double angleDeg) {
-        // if (telescopeState != TelescopeStates.LAUNCHER) return Command.noRequirements(co -> {}).named("NOT LAUNCHING");
-            return run(co -> {
-                setpoint = angleDeg;
-            while(Math.abs((setpoint - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / setpoint) > 0.01) {
-                // functions as a timer, cmd gives up control when it's close to its setpoint
-                io.setPivotAngleDeg(setpoint);
-                co.yield();
-            }
-        }).named("PIVOT ANGLE " + angleDeg);
     }
 
     public double getPivotAngleDeg() {
@@ -80,12 +70,23 @@ public class Telescope extends Mechanism {
     }
 
     public double getArmExtensionInches() {
-        return (mean(
+        return mean(
             inputs.arm1Data.position(),
             inputs.arm2Data.position())
-            / ArmConstants.EXTENSION_REDUCTION
+            / (state == TelescopeStates.CLUMB ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION)
+            // / ArmConstants.EXTENSION_REDUCTION
             * Units.metersToInches(ArmConstants.ROTOR_CIRCUMF_METERS)
-        );
+            + (state == TelescopeStates.CLUMB ? (
+                Units.inchesToMeters(TelescopeStates.CLIMB_RAISED.getArmExtensionInches())
+                    / ArmConstants.ROTOR_CIRCUMF_METERS
+                    * ArmConstants.EXTENSION_REDUCTION)
+                : 0)
+        ;
+    }
+
+    private double getArmSetpoint(TelescopeStates state) {
+        // return (state==TelescopeStates.CLUMB ? 2 : state.getArmExtensionInches());
+        return state.getArmExtensionInches();
     }
 
     private double mean(double... values) {

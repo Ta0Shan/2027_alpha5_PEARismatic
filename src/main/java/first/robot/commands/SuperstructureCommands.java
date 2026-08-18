@@ -36,7 +36,7 @@ public class SuperstructureCommands {
         return Command.noRequirements(co -> {co.wait(Time.ofBaseUnits(seconds, Seconds));}).named("WAIT");
     }
     
-    private Command instantApplyState(SuperstructureStates state) {
+    public Command instantApplyState(SuperstructureStates state) {
         return Command.parallel(
             Command.noRequirements(co -> {superstructureState = state;}).named("SET STATE " + superstructureState.name()),
             telescope.applyState(state.getTelescopeState()),
@@ -56,10 +56,9 @@ public class SuperstructureCommands {
         return Command.requiring(telescope, launcher, endEffector).executing(co -> {
             co.fork(instantApplyState(SuperstructureStates.LAUNCHER));
             co.awaitAll(
-                telescope.setPivotAngleDeg(50),
+                telescope.applyState(superstructureState.getTelescopeState()),
                 launcher.setLauncherRPS(60)
             );
-            co.await(pause(1));
         }).named("SHUTTLE");
     }
 
@@ -82,7 +81,7 @@ public class SuperstructureCommands {
 
     public Command climb() {
         return Command.requiring(telescope).executing(co -> {
-            co.await(applyState(SuperstructureStates.CLUMB));
+            co.await(instantApplyState(SuperstructureStates.CLUMB));
         }).named("CLIMB");
     }
 

@@ -12,6 +12,9 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
+import com.revrobotics.servohub.ServoChannel;
+import com.revrobotics.servohub.ServoHub;
+import com.revrobotics.servohub.ServoChannel.ChannelId;
 
 import first.robot.Constants;
 import first.robot.subsystems.telescope.TelescopeConstants.ArmConstants;
@@ -30,6 +33,10 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
 
     protected final PearadoxTalonFX arm1;
     protected final PearadoxTalonFX arm2;
+
+    protected final ServoHub armHub;
+    protected final ServoChannel armServo;
+    protected boolean isClimbing;
 
     protected final MotionMagicDutyCycle mmDutyCycle;
     protected final Follower follower;
@@ -63,6 +70,13 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
             ArmConstants.CONFIG(),
             Subsystem.TELESCOPE_EXTENSION);
 
+        armHub = new ServoHub(0, ArmConstants.SERVO_HUB_ID);
+
+        armServo = armHub.getServoChannel(ChannelId.kChannelId0);
+
+        armServo.setEnabled(true);
+        armServo.setPowered(true);
+        armServo.setPulseWidth(ArmConstants.EXTENSION_PULSE_WIDTH_uS);
         
         // setting up control modes
         mmDutyCycle = new MotionMagicDutyCycle(0);
@@ -91,6 +105,8 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
 
         inputs.arm1Data = arm1.getData();
         inputs.arm2Data = arm2.getData();
+
+        inputs.armServoAppliedPulseWidth = armServo.getPulseWidth().get();
     }
 
     public void setPivotAngleDeg(double angleDeg) {
@@ -104,15 +120,20 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
     }
 
     public void setArmExtensionIn(boolean isClimbing, double extensionInches) {
-        double motorSetpoint = (Units.inchesToMeters(extensionInches) / ArmConstants.ROTOR_CIRCUMF_METERS)
+        this.isClimbing = isClimbing;
+        double motorSetpoint = (Units.inchesToMeters(extensionInches) / ArmConstants.ROTOR_CIRCUMF_METERS) // * ArmConstants.EXTENSION_REDUCTION;
                 * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION);
         arm1.setControl(mmDutyCycle.withPosition(motorSetpoint));
     }
 
     public void setArmExtensionIn(boolean isClimbing, double extensionInches, DoubleSupplier ff) {
+        this.isClimbing = isClimbing;
         double motorSetpoint = (Units.inchesToMeters(extensionInches) / ArmConstants.ROTOR_CIRCUMF_METERS)
-                 * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION);
-            arm1.setControl(mmDutyCycle.withPosition(motorSetpoint).withFeedForward(ff.getAsDouble()));
+            * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION);
+        arm1.setControl(mmDutyCycle.withPosition(motorSetpoint).withFeedForward(ff.getAsDouble()));
     }
 
+    public void shiftDogs(boolean isClimbing) {
+        armServo.setPulseWidth(isClimbing ? ArmConstants.CLIMB_PULSE_WIDTH_uS : ArmConstants.EXTENSION_PULSE_WIDTH_uS);
+    }
 }

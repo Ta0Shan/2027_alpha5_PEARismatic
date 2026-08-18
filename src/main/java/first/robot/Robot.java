@@ -110,7 +110,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopInit() {
-    scheduler.schedule(robotContainer.stateMachine());
+    scheduler.schedule(robotContainer.teleopSM());
   }
 
   @Override
@@ -122,7 +122,9 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void utilityInit() {}
+  public void utilityInit() {
+    scheduler.schedule(robotContainer.functionalSM());
+  }
 
   @Override
   public void utilityPeriodic() {}

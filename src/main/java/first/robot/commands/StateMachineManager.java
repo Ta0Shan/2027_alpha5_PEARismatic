@@ -14,19 +14,18 @@ import org.wpilib.command3.StateMachine.State;
 import org.wpilib.command3.Trigger;
 
 import first.robot.Constants.SuperstructureStates;
+import first.robot.subsystems.drive.Drive;
+import first.robot.subsystems.endEffector.EE;
+import first.robot.subsystems.launcher.Launcher;
+import first.robot.subsystems.telescope.Telescope;
 
 /** Add your docs here. */
-public class BigStateMachine {
+public class StateMachineManager {
 
     private final SuperstructureCommands superstructure;
     private final DriveCommands drivetrain;
 
     // Button triggers
-
-    private final DoubleSupplier throttleXSupplier;
-    private final DoubleSupplier throttleYSupplier;
-    private final DoubleSupplier twistSupplier;
-
     private final Trigger homeTrigger;
     private final Trigger intakeTrigger;
     private final Trigger outtakeTrigger;
@@ -41,28 +40,30 @@ public class BigStateMachine {
     // Robot State Triggers
     private Trigger isFront;
 
-    public BigStateMachine(SuperstructureCommands superstructureCommands,
-                            DriveCommands driveCommands,
-                            DoubleSupplier throttleX,
-                            DoubleSupplier throttleY,
-                            DoubleSupplier twist,
-                            Trigger home, 
-                            Trigger intake,
-                            Trigger outtake,
-                            Trigger goToL1, 
-                            Trigger goToL2, 
-                            Trigger goToClassifier, 
-                            Trigger goToClimb, 
-                            Trigger primaryScore,
-                            Trigger secondaryScore
-                            ) {
+    // public StateMachineManager(SuperstructureCommands superstructureCommands,
+    //                         DriveCommands driveCommands,
+    public StateMachineManager(Telescope telescope,
+                                Launcher launcher,
+                                EE endEffector,
+                                Drive drive,
+                                DoubleSupplier throttleX,
+                                DoubleSupplier throttleY,
+                                DoubleSupplier twist,
+                                Trigger home, 
+                                Trigger intake,
+                                Trigger outtake,
+                                Trigger goToL1, 
+                                Trigger goToL2, 
+                                Trigger goToClassifier, 
+                                Trigger goToClimb, 
+                                Trigger primaryScore,
+                                Trigger secondaryScore
+                                ) {
 
-        superstructure = superstructureCommands;
-        drivetrain = driveCommands;
+        superstructure = new SuperstructureCommands(telescope, launcher, endEffector);
+        drivetrain = new DriveCommands(drive);
 
-        throttleXSupplier = throttleX;
-        throttleYSupplier = throttleY;
-        twistSupplier = twist;
+        drive.setDefaultCommand(drivetrain.joystickDrive(throttleX, throttleY, twist));
 
         homeTrigger = home;
         intakeTrigger = intake;
@@ -77,15 +78,12 @@ public class BigStateMachine {
         isFront = new Trigger(() -> true); // TODO: pos
     }
 
-    public StateMachine SM() {
+    public StateMachine teleop() {
         // Defining States
-            StateMachine stateMachine = new StateMachine("STATE MACHINE");
+            StateMachine stateMachine = new StateMachine("TELE-OP");
 
             // mechanism states / starters
-            State HOME = stateMachine.addState(Command.parallel(
-                superstructure.applyState(SuperstructureStates.HOME),
-                drivetrain.joystickDrive(throttleXSupplier, throttleYSupplier, twistSupplier))
-                .withAutomaticName()); // resting state
+            State HOME = stateMachine.addState(superstructure.applyState(SuperstructureStates.HOME)); // resting state
             State INTAKING = stateMachine.addState(superstructure.applyState(SuperstructureStates.INTAKING)); // arm down, intaking
             State OUTTAKING = stateMachine.addState(superstructure.applyState(SuperstructureStates.OUTTAKING)); // arm down, outtaking
             State L1_FRONT = stateMachine.addState(superstructure.applyState(SuperstructureStates.L1_FRONT)); // arm up forwards, prepped for L1
@@ -95,10 +93,7 @@ public class BigStateMachine {
             State CLASSIFIER_FRONT = stateMachine.addState(superstructure.applyState(SuperstructureStates.CLASSIFIER_FRONT)); // arm up forwards, prepped for lower classifier
             State CLASSIFIER_BACK = stateMachine.addState(superstructure.applyState(SuperstructureStates.CLASSIFIER_BACK)); // arm up backwards, prepped for upper classifier
             State CLIMB_RAISED = stateMachine.addState(superstructure.applyState(SuperstructureStates.CLIMB_RAISED)); // arm up 90, prepped for climb
-            State IDLING = stateMachine.addState(Command.parallel(
-                superstructure.hold(),
-                drivetrain.joystickDrive(throttleXSupplier, throttleYSupplier, twistSupplier))
-                .withAutomaticName());
+            State IDLING = stateMachine.addState(superstructure.hold());
 
             // alignment states / in-betweens
             State SHUTTLE = stateMachine.addState(superstructure.shuttle()); // TODO: pose when akit and drive works
@@ -166,12 +161,63 @@ public class BigStateMachine {
 
             // when goToClimbTrigger is triggered, we will begin climb sequence with CLIMB_RAISED
             HOME.switchTo(CLIMB_RAISED).when(climbTrigger);
-            // since CLIMB engages the 1-time dog shifter, we want to make sure it's deliberate by requiring two buttons
-            CLIMB_RAISED.switchTo(CLIMB).when(primaryScoreTrigger.and(secondaryScoreTrigger));
+            CLIMB_RAISED.switchTo(CLIMB).when(primaryScoreTrigger);
             // marks CLIMB as the final command
             CLIMB.exitStateMachine().whenComplete();
 
             return stateMachine;
+    }
+
+    public StateMachine functional() {
+        StateMachine functional = new StateMachine("FUNCTIONAL");
+
+        // State DRIVE_CIRCLE = functional.addState(functional); // TODO: write drive command
+        State INTAKE_OUTTAKE = functional.addState(Command.sequence(
+            superstructure.instantApplyState(SuperstructureStates.INTAKING),
+            superstructure.pause(1),
+            superstructure.instantApplyState(SuperstructureStates.OUTTAKING),
+            superstructure.pause(1)
+        ).withAutomaticName());
+        State L1_FRONT_BACK = functional.addState(Command.sequence(
+            superstructure.instantApplyState(SuperstructureStates.L1_FRONT),
+            superstructure.pause(1),
+            superstructure.instantApplyState(SuperstructureStates.L1_BACK),
+            superstructure.pause(1)
+        ).withAutomaticName());
+        State L2_FRONT_BACK = functional.addState(Command.sequence(
+            superstructure.instantApplyState(SuperstructureStates.L2_FRONT),
+            superstructure.pause(1),
+            superstructure.instantApplyState(SuperstructureStates.L2_BACK),
+            superstructure.pause(1)
+        ).withAutomaticName());
+        State CLASSIFIER_FRONT_BACK = functional.addState(Command.sequence(
+            superstructure.instantApplyState(SuperstructureStates.CLASSIFIER_FRONT),
+            superstructure.pause(1),
+            superstructure.instantApplyState(SuperstructureStates.CLASSIFIER_BACK),
+            superstructure.pause(1)
+        ).withAutomaticName());
+        State LAUNCHER = functional.addState(Command.sequence(
+            superstructure.instantApplyState(SuperstructureStates.LAUNCHER),
+            superstructure.shuttle(),
+            superstructure.pause(1)
+        ).withAutomaticName());
+        State CLIMB_SEQUENCE = functional.addState(Command.sequence(
+            superstructure.instantApplyState(SuperstructureStates.CLIMB_RAISED),
+            superstructure.pause(1),
+            superstructure.instantApplyState(SuperstructureStates.CLUMB)
+        ).withAutomaticName());
+
+        // functional.setInitialState(DRIVE_CIRCLE);
+        functional.setInitialState(INTAKE_OUTTAKE);
+
+        INTAKE_OUTTAKE.switchTo(L1_FRONT_BACK).whenComplete();
+        L1_FRONT_BACK.switchTo(L2_FRONT_BACK).whenComplete();
+        L2_FRONT_BACK.switchTo(CLASSIFIER_FRONT_BACK).whenComplete();
+        CLASSIFIER_FRONT_BACK.switchTo(LAUNCHER).whenComplete();
+        LAUNCHER.switchTo(CLIMB_SEQUENCE).whenComplete();
+        CLIMB_SEQUENCE.exitStateMachine().whenComplete();
+
+        return functional;
     }
 
     public void logData() {

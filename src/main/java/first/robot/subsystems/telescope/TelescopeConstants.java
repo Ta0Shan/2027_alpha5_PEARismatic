@@ -32,8 +32,8 @@ public class TelescopeConstants {
         CLASSIFIER_FRONT(36., 0.),
         CLASSIFIER_BACK(87.5, 0.),
         CLIMB_RAISED(90., 7.), // 90 deg
-        CLUMB(90., -10.), // 90 deg, weird number because gearing's swapped atp
-        LAUNCHER(0., 0.); // variable
+        CLUMB(90., -9.6064291292), // 90 deg, weird number because gearing's swapped atp
+        LAUNCHER(0., 0.); // 0 deg
 
         private final double pivotAngleDeg;
         private final double armExtensionInches;
@@ -58,9 +58,9 @@ public class TelescopeConstants {
         public static final TalonFXConfiguration PIVOT_CONFIG() {
             TalonFXConfiguration config = new TalonFXConfiguration();
 
-            config.MotionMagic.MotionMagicCruiseVelocity = 9999;
-            config.MotionMagic.MotionMagicAcceleration = 200;
-            config.MotionMagic.MotionMagicJerk = 400;
+            config.MotionMagic.MotionMagicCruiseVelocity = 100;
+            config.MotionMagic.MotionMagicAcceleration = 150;
+            config.MotionMagic.MotionMagicJerk = 300;
 
             config.CurrentLimits.StatorCurrentLimitEnable = true;
             config.CurrentLimits.StatorCurrentLimit = 60;
@@ -70,7 +70,6 @@ public class TelescopeConstants {
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-            // kG should depend on pivot angle and arm extension (different CoM)
             config.Slot0.kP = 1.0;
             config.Slot0.kI = 0.0;
             config.Slot0.kD = 0.0; // TODO: tune
@@ -103,12 +102,16 @@ public class TelescopeConstants {
 
         public static final double ROTOR_CIRCUMF_METERS = Units.inchesToMeters(Math.PI * (1.2871145)); // TODO: double check this number
         
+        public static final int SERVO_HUB_ID = 33;
+        public static final int EXTENSION_PULSE_WIDTH_uS = 2500; // TODO: should be max clockwise
+        public static final int CLIMB_PULSE_WIDTH_uS = 500; // TODO: should be max counter-clockwise
+
         public static final TalonFXConfiguration CONFIG() {
             TalonFXConfiguration config = new TalonFXConfiguration();
 
-            config.MotionMagic.MotionMagicCruiseVelocity = 9999;
-            config.MotionMagic.MotionMagicAcceleration = 200;
-            config.MotionMagic.MotionMagicJerk = 400; // TODO: tune
+            config.MotionMagic.MotionMagicCruiseVelocity = 100;
+            config.MotionMagic.MotionMagicAcceleration = 150;
+            config.MotionMagic.MotionMagicJerk = 300; // TODO: tune
 
             config.CurrentLimits.StatorCurrentLimitEnable = true;
             config.CurrentLimits.StatorCurrentLimit = 60;
@@ -118,7 +121,6 @@ public class TelescopeConstants {
             config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
             config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-            // kG should depend on arm angle
             config.Slot0.kP = 1.0;
             config.Slot0.kI = 0.0;
             config.Slot0.kD = 0.0; // TODO: tune

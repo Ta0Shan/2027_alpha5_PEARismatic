@@ -19,7 +19,7 @@ public class EEConstants {
         L2_FRONT(166),
         L2_BACK(88),
         CLASSIFIER_FRONT(177),
-        CLASSIFIER_BACK(66)
+        CLASSIFIER_BACK(55)
         ;
 
         private final double angleFromArmDeg;

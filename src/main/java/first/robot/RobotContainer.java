@@ -10,9 +10,10 @@ import org.wpilib.smartdashboard.SendableChooser;
 import org.wpilib.smartdashboard.SmartDashboard;
 
 import first.robot.Constants.Mode;
-import first.robot.commands.BigStateMachine;
+import first.robot.Constants.SuperstructureStates;
 import first.robot.commands.SuperstructureCommands;
 import first.robot.commands.DriveCommands;
+import first.robot.commands.StateMachineManager;
 import first.robot.generated.TunerConstants;
 import first.robot.subsystems.MechVisualizer;
 import first.robot.subsystems.drive.Drive;
@@ -39,6 +40,7 @@ import first.robot.util.PhoenixUtil;
 public class RobotContainer {
 
   public final CommandNiDsXboxController driver;
+  public final CommandNiDsXboxController operator;
 
   private final SendableChooser<Command> autoChooser;
 
@@ -50,14 +52,13 @@ public class RobotContainer {
 
   // private final Vision vision;
 
-  private final BigStateMachine statemachine;
-  private final SuperstructureCommands superstructureCommands;
-  private final DriveCommands driveCommands;
+  private final StateMachineManager SMManager;
 
   private final MechVisualizer visualizer2d;
 
   public RobotContainer() {
     driver = new CommandNiDsXboxController(0);
+    operator = new CommandNiDsXboxController(1);
 
     autoChooser = new SendableChooser<>();
 
@@ -106,13 +107,13 @@ public class RobotContainer {
 
 
     // configuring state machine
-
-    superstructureCommands = new SuperstructureCommands(telescope, launcher, endEffector);
-    driveCommands = new DriveCommands(drive);
-
-    statemachine = new BigStateMachine(
-      superstructureCommands,
-      driveCommands,
+    SMManager = new StateMachineManager(
+      // superstructureCommands,
+      // driveCommands,
+      telescope,
+      launcher,
+      endEffector,
+      drive,
       () -> driver.getLeftX(),
       () -> driver.getLeftY(),
       () -> driver.getRightX(),
@@ -142,8 +143,12 @@ public class RobotContainer {
     return autoChooser.getSelected();
   }
 
-  public Command stateMachine() {
-    return statemachine.SM();
+  public Command teleopSM() {
+    return SMManager.teleop();
+  }
+
+  public Command functionalSM() {
+    return SMManager.functional();
   }
 
   public void periodic() {
@@ -151,7 +156,7 @@ public class RobotContainer {
     telescope.logIO();
     launcher.logIO();
     endEffector.logIO();
-    statemachine.logData();
+    SMManager.logData();
     if (Constants.currentMode!=Mode.REAL) visualizer2d.updateVis();
     PhoenixUtil.refreshAll();
   }

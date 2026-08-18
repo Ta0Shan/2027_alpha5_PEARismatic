@@ -7,6 +7,7 @@ import org.wpilib.simulation.SingleJointedArmSim;
 
 import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.revrobotics.servohub.ServoHubSim;
 
 import first.robot.Constants;
 import first.robot.subsystems.endEffector.EEConstants;
@@ -20,9 +21,13 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
     private final TalonFXSimState pivot1SimState;
     private final TalonFXSimState pivot2SimState;
     private final TalonFXSimState pivot3SimState;
+
     private final CANcoderSimState absoluteEncoderSimState;
+
     private final TalonFXSimState arm1SimState;
     private final TalonFXSimState arm2SimState;
+
+    private final ServoHubSim armHubSim;
 
     private final VariableLengthArmSim pivotPhysicsSim = new VariableLengthArmSim(
         DCMotor.getKrakenX60Foc(3), 
@@ -40,7 +45,8 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         ArmConstants.EXTENSION_REDUCTION,
         ArmConstants.CARRIAGE_MASS_KG,
         ArmConstants.CARRIAGE_DRUM_RADIUS_METERS,
-        0,
+        // 0,
+        -10,
         ArmConstants.MAX_EXTENSION_METERS,
         true
     );
@@ -54,6 +60,10 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
 
         arm1SimState = arm1.getSimState();
         arm2SimState = arm2.getSimState();
+
+        armHubSim = new ServoHubSim(armHub);
+        armHubSim.enable();
+
     }
 
     @Override
@@ -90,6 +100,12 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         arm2SimState.setRawRotorPosition((armPhysicsSim.getPosition() / ArmConstants.ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
         arm1SimState.setRotorVelocity((armPhysicsSim.getVelocity() / ArmConstants.ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
         arm2SimState.setRotorVelocity((armPhysicsSim.getVelocity() / ArmConstants.ROTOR_CIRCUMF_METERS) * ArmConstants.EXTENSION_REDUCTION);
+
+        // arm1SimState.setRawRotorPosition((armPhysicsSim.getPosition() / ArmConstants.ROTOR_CIRCUMF_METERS) * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION));
+        // arm2SimState.setRawRotorPosition((armPhysicsSim.getPosition() / ArmConstants.ROTOR_CIRCUMF_METERS) * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION));
+        // arm1SimState.setRotorVelocity((armPhysicsSim.getVelocity() / ArmConstants.ROTOR_CIRCUMF_METERS) * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION));
+        // arm2SimState.setRotorVelocity((armPhysicsSim.getVelocity() / ArmConstants.ROTOR_CIRCUMF_METERS) * (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION));
+
     }
 
     private double estimateCGRadius(double extensionLength) {

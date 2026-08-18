@@ -18,6 +18,8 @@ public interface TelescopeIO {
 
         public MotorData arm1Data;
         public MotorData arm2Data;
+
+        public int armServoAppliedPulseWidth;
     }
 
     public default void updateInputs(TelescopeIOInputs inputs) {}
@@ -29,4 +31,6 @@ public interface TelescopeIO {
     public default void setArmExtensionIn(boolean isClimbing, double extensionInches) {}
 
     public default void setArmExtensionIn(boolean isClimbing, double extensionInches, DoubleSupplier ff) {}
+
+    public default void shiftDogs(boolean isClimbing) {}
 }

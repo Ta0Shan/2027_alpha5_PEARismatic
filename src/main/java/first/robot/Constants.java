@@ -21,7 +21,7 @@ public class Constants {
     // public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
     public static final Mode currentMode = simMode;
 
-    public static final CANBus SUPERSTRUCTURE_CAN_BUS = new CANBus("structure");
+    public static final CANBus SUPERSTRUCTURE_CAN_BUS = CANBus.systemcore(0);
     public static final double UPDATE_FREQ_HZ = 50;
     public static final double UPDATE_PERIOD_SEC = 1 / UPDATE_FREQ_HZ;
 
@@ -36,8 +36,8 @@ public class Constants {
         CLASSIFIER_FRONT(TelescopeStates.CLASSIFIER_FRONT, WristStates.CLASSIFIER_FRONT),
         CLASSIFIER_BACK(TelescopeStates.CLASSIFIER_BACK, WristStates.CLASSIFIER_BACK),
         LAUNCHER(TelescopeStates.LAUNCHER, WristStates.STOWED),
-        CLIMB_RAISED(TelescopeStates.CLIMB_RAISED, WristStates.STOWED),
-        CLUMB(TelescopeStates.CLUMB, WristStates.STOWED);
+        CLIMB_RAISED(TelescopeStates.CLIMB_RAISED, WristStates.DEPLOYED),
+        CLUMB(TelescopeStates.CLUMB, WristStates.DEPLOYED);
 
         private final TelescopeStates telescopeState;
         private final WristStates wristState;

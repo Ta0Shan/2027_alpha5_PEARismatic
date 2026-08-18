@@ -25,7 +25,7 @@ public final class PhoenixUtil {
       error = command.get();
       if (error.isOK()) break;
     }
-    if (!error.isOK()) System.out.println(error.toString());
+    if (!error.isOK()) System.out.println(error.getName());
   }
 
   /** Signals for synchronized refresh. */
