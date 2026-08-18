@@ -17,7 +17,7 @@ import first.robot.subsystems.telescope.TelescopeConstants.TelescopeStates;
 
 public class Telescope extends Mechanism {
     private final TelescopeIO io;
-    private final Debouncer setpointDebouncer = new Debouncer(0.15);
+    private final Debouncer setpointDebouncer = new Debouncer(0.2);
 
     private final TelescopeIOInputsAutoLogged inputs = new TelescopeIOInputsAutoLogged();
 
@@ -44,8 +44,8 @@ public class Telescope extends Mechanism {
         return run(co -> {
             this.state = state;
             while(setpointDebouncer.calculate(
-                    Math.abs((state.getPivotAngleDeg() - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition)) / state.getPivotAngleDeg()) > 0.005
-                    || Math.abs((getArmSetpoint(state) - getArmExtensionInches()) / getArmSetpoint(state)) > 0.005)
+                    Math.abs((state.getPivotAngleDeg() - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition))) > 0.5
+                    || Math.abs(getArmSetpoint(state) - getArmExtensionInches()) > 0.05)
                 ) {
                 // functions as a timer, cmd gives up control when it's close to its setpoint
                 io.setPivotAngleDeg(state.getPivotAngleDeg());
@@ -74,13 +74,14 @@ public class Telescope extends Mechanism {
             inputs.arm1Data.position(),
             inputs.arm2Data.position())
             / (state == TelescopeStates.CLUMB ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION)
+            // / (inputs.armServoAppliedPulseWidth == ArmConstants.CLIMB_PULSE_WIDTH_uS ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION)
             // / ArmConstants.EXTENSION_REDUCTION
             * Units.metersToInches(ArmConstants.ROTOR_CIRCUMF_METERS)
-            + (state == TelescopeStates.CLUMB ? (
-                Units.inchesToMeters(TelescopeStates.CLIMB_RAISED.getArmExtensionInches())
-                    / ArmConstants.ROTOR_CIRCUMF_METERS
-                    * ArmConstants.EXTENSION_REDUCTION)
-                : 0)
+            // + (state == TelescopeStates.CLUMB ? (
+            //     Units.inchesToMeters(TelescopeStates.CLIMB_RAISED.getArmExtensionInches())
+            //         / ArmConstants.ROTOR_CIRCUMF_METERS
+            //         * ArmConstants.EXTENSION_REDUCTION)
+            //     : 0)
         ;
     }
 

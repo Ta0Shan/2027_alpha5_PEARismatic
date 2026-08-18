@@ -1,0 +1,7 @@
+7/18 cad export
+
+file name	mechanism name
+model 	 = 	stationary (drivetrain, etc.)
+model_0  = 	arm stage 1 + launcher
+model_1  =	arm stage 2
+model_2  =	end effector/intake

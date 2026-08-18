@@ -45,7 +45,7 @@ public class PearadoxTalonFX extends TalonFX {
           getDeviceTemp(false)
         };
 
-    BaseStatusSignal.setUpdateFrequencyForAll(Constants.UPDATE_FREQ_HZ, telemetrySignals);
+    BaseStatusSignal.setUpdateFrequencyForAll(Constants.LOOP_FREQ_HZ, telemetrySignals);
 
     this.optimizeBusUtilization();
 

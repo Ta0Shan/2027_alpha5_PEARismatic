@@ -1,0 +1,11 @@
+{
+  "name": "CrysalCaverns",
+  "isFTC": false,
+  "coordinateSystem":
+      "wall-blue",
+  "sourceUrl": "",
+  "topLeft": [99, 41],
+  "bottomRight": [1474, 723],
+  "widthInches": 648.00,
+  "heightInches": 324.00
+}

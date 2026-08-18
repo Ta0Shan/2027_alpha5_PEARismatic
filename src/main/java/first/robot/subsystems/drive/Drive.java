@@ -39,11 +39,11 @@ import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
 import org.wpilib.math.system.DCMotor;
 import org.wpilib.command3.Mechanism;
-import org.wpilib.command3.Command; // sysId doesn't exist in cmdv3 so all the commands to run sysId are commented out, hopefully they add sysId somehow
+import org.wpilib.command3.Command; // sysId doesn't exist in cmdv3 so all the commands to run sysId are commented out, hopefully they add sysId or a replacement
 import org.wpilib.driverstation.Alert;
 import org.wpilib.driverstation.Alert.Level;
 import org.wpilib.driverstation.internal.DriverStationBackend;
-import org.wpilib.driverstation.Alliance; // AutoBuilder for Pathplanner requires a Subsystem which is cmdv2 specific, hopefully they add a version for cmdv3 somehow
+import org.wpilib.driverstation.Alliance; // AutoBuilder for Pathplanner requires a Subsystem which is cmdv2 specific, hopefully they update the vendordep
 
 public class Drive extends Mechanism {
   // TunerConstants doesn't include these constants, so they are declared locally
@@ -61,7 +61,7 @@ public class Drive extends Mechanism {
   private static final double ROBOT_MASS_KG = 74.088;
   private static final double ROBOT_MOI = 6.883;
   private static final double WHEEL_COF = 1.2;
-  private static final RobotConfig PP_CONFIG =
+  private static final RobotConfig PP_CONFIG = // AutoBuilder for Pathplanner requires a Subsystem which is cmdv2 specific
       new RobotConfig(
           ROBOT_MASS_KG,
           ROBOT_MOI,

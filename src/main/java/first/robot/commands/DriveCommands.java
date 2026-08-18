@@ -153,6 +153,12 @@ public class DriveCommands {
         }).named("JOYSTICK DRIVE AT ANGLE " + rotationSupplier.get().getDegrees());
     }
 
+    public Command driveCircle() {
+        return Command.requiring(drive).executing(co -> {
+            // TODO: something here this is lowk complicated
+        }).named("DRIVE CIRCLE");
+    }
+
 //   /**
 //    * Measures the velocity feedforward constants for the drive motors.
 //    *

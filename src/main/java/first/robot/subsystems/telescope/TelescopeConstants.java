@@ -32,7 +32,8 @@ public class TelescopeConstants {
         CLASSIFIER_FRONT(36., 0.),
         CLASSIFIER_BACK(87.5, 0.),
         CLIMB_RAISED(90., 7.), // 90 deg
-        CLUMB(90., -9.6064291292), // 90 deg, weird number because gearing's swapped atp
+        CLUMB(90., 2.), // 90 deg, weird number because gearing's swapped atp
+        // CLUMB(90., -9.6064291292), // 90 deg, weird number because gearing's swapped atp
         LAUNCHER(0., 0.); // 0 deg
 
         private final double pivotAngleDeg;
@@ -111,7 +112,7 @@ public class TelescopeConstants {
 
             config.MotionMagic.MotionMagicCruiseVelocity = 100;
             config.MotionMagic.MotionMagicAcceleration = 150;
-            config.MotionMagic.MotionMagicJerk = 300; // TODO: tune
+            // config.MotionMagic.MotionMagicJerk = 300; // TODO: tune
 
             config.CurrentLimits.StatorCurrentLimitEnable = true;
             config.CurrentLimits.StatorCurrentLimit = 60;

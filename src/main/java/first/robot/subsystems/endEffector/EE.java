@@ -39,7 +39,7 @@ public class EE extends Mechanism {
             this.rollerState = rollerState;
             io.setWristAngleDeg(wristState.getAngleDeg());
             io.setRollerVoltage(rollerState.getVoltage());
-            while((wristState.getAngleDeg() - Units.rotationsToDegrees(inputs.wristData.position()) / EEConstants.WRIST_REDUCTION) / wristState.getAngleDeg() > 0.005) {
+            while(Math.abs(wristState.getAngleDeg() - Units.rotationsToDegrees(inputs.wristData.position()) / EEConstants.WRIST_REDUCTION) > 0.5) {
                 // functions as a timer, cmd gives up control when it's close to its setpoint
                 co.yield();
             }

@@ -21,9 +21,9 @@ public class Constants {
     // public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
     public static final Mode currentMode = simMode;
 
-    public static final CANBus SUPERSTRUCTURE_CAN_BUS = CANBus.systemcore(0);
-    public static final double UPDATE_FREQ_HZ = 50;
-    public static final double UPDATE_PERIOD_SEC = 1 / UPDATE_FREQ_HZ;
+    public static final CANBus SUPERSTRUCTURE_CAN_BUS = CANBus.systemcore(4);
+    public static final double LOOP_FREQ_HZ = 50;
+    public static final double LOOP_PERIOD_SEC = 1 / LOOP_FREQ_HZ;
 
     public static enum SuperstructureStates {
         HOME(TelescopeStates.HOME, WristStates.STOWED, RollerStates.IDLE, 0.0),

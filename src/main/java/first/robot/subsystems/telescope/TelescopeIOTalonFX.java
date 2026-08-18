@@ -10,6 +10,7 @@ import org.wpilib.math.util.Units;
 
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
+import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.revrobotics.servohub.ServoChannel;
@@ -135,5 +136,11 @@ public abstract class TelescopeIOTalonFX implements TelescopeIO {
 
     public void shiftDogs(boolean isClimbing) {
         armServo.setPulseWidth(isClimbing ? ArmConstants.CLIMB_PULSE_WIDTH_uS : ArmConstants.EXTENSION_PULSE_WIDTH_uS);
+        if (isClimbing) {
+            arm1.setControl(new NeutralOut());
+            PhoenixUtil.tryUntilOk(5, () -> arm1.setPosition(arm1.getPosition().getValueAsDouble() / ArmConstants.EXTENSION_REDUCTION * ArmConstants.CLIMB_REDUCTION));
+            PhoenixUtil.tryUntilOk(5, () -> arm2.setPosition(arm2.getPosition().getValueAsDouble() / ArmConstants.EXTENSION_REDUCTION * ArmConstants.CLIMB_REDUCTION));
+
+        }
     }
 }

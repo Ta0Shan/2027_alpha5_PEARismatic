@@ -171,7 +171,10 @@ public class StateMachineManager {
     public StateMachine functional() {
         StateMachine functional = new StateMachine("FUNCTIONAL");
 
-        // State DRIVE_CIRCLE = functional.addState(functional); // TODO: write drive command
+        State DRIVE_CIRCLE = functional.addState(Command.sequence(
+            drivetrain.driveCircle(),
+            superstructure.pause(1)
+        ).withAutomaticName()); // TODO: write drive command
         State INTAKE_OUTTAKE = functional.addState(Command.sequence(
             superstructure.instantApplyState(SuperstructureStates.INTAKING),
             superstructure.pause(1),
@@ -207,9 +210,10 @@ public class StateMachineManager {
             superstructure.instantApplyState(SuperstructureStates.CLUMB)
         ).withAutomaticName());
 
-        // functional.setInitialState(DRIVE_CIRCLE);
-        functional.setInitialState(INTAKE_OUTTAKE);
+        functional.setInitialState(DRIVE_CIRCLE);
+        // functional.setInitialState(INTAKE_OUTTAKE);
 
+        DRIVE_CIRCLE.switchTo(INTAKE_OUTTAKE).whenComplete();
         INTAKE_OUTTAKE.switchTo(L1_FRONT_BACK).whenComplete();
         L1_FRONT_BACK.switchTo(L2_FRONT_BACK).whenComplete();
         L2_FRONT_BACK.switchTo(CLASSIFIER_FRONT_BACK).whenComplete();

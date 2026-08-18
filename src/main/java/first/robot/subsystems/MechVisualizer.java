@@ -5,6 +5,9 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismObject2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
+import org.wpilib.math.geometry.Rotation3d;
+import org.wpilib.math.geometry.Transform3d;
+import org.wpilib.math.geometry.Translation3d;
 import org.wpilib.math.util.Units;
 import org.wpilib.smartdashboard.SmartDashboard;
 import org.wpilib.util.Color;
@@ -148,6 +151,15 @@ public class MechVisualizer {
     );
     private double rollersPosition;
 
+    
+
+    static class VisualizerConstants {
+        public static final Translation3d STAGE0_ZERO = new Translation3d(-0.241300, 0, 0.377825);
+        public static final Translation3d WRIST_ZERO = new Translation3d(0.535083, 0, 0.238125);
+        public static final Translation3d WRIST_OFFSET = WRIST_ZERO.minus(STAGE0_ZERO);
+    }
+
+
     public MechVisualizer(Telescope telescope, Launcher launcher, EE endEffector) {
         this.telescope = telescope;
         this.launcher = launcher;
@@ -157,15 +169,16 @@ public class MechVisualizer {
     }
 
     public void updateVis() {
-        Logger.recordOutput("Visualizer", mech);
         updateData(telescope.getPivotAngleDeg(),
         telescope.getArmExtensionInches(),
         endEffector.getWristAngleDeg(),
         launcher.getMeanRPS(),
         endEffector.getRollersRPS());
+        Logger.recordOutput("Simulation/2d Visualizer", mech);
+        Logger.recordOutput("Simulation/3d Components", getTransforms());
     }
 
-    public void updateData(double pivotAngleDegs,
+    private void updateData(double pivotAngleDegs,
             double armExtensionInches,
             double wristAngleDegs,
             double launcherRPS,
@@ -174,13 +187,23 @@ public class MechVisualizer {
         carriageLigament.setLength(Units.inchesToMeters(armExtensionInches + carriageOffset));
         wristLigament1.setAngle(EEConstants.STARTING_ANGLE_OFFSET_FROM_PARALLEL_DEG - wristAngleDegs + wristOffset);
         wristLigament2.setAngle(EEConstants.STARTING_ANGLE_OFFSET_FROM_PARALLEL_DEG - wristAngleDegs - wristOffset);
-        flywheelPosition += Units.rotationsToDegrees(launcherRPS/10) * Constants.UPDATE_PERIOD_SEC;
+        flywheelPosition += Units.rotationsToDegrees(launcherRPS/10) * Constants.LOOP_PERIOD_SEC;
         if (launcherRPS == 0) flywheelPosition = 0;
         flywheelLigament1.setAngle(-flywheelPosition);
         flywheelLigament2.setAngle(flywheelPosition);
-        rollersPosition += Units.rotationsToDegrees(rollersRPS/5) * Constants.UPDATE_PERIOD_SEC;
+        rollersPosition += Units.rotationsToDegrees(rollersRPS/5) * Constants.LOOP_PERIOD_SEC;
         if (rollersRPS == 0) rollersPosition = 0;
         rollerLigament1.setAngle(-rollersPosition);
         rollerLigament2.setAngle(rollersPosition);
+    }
+
+    private Transform3d[] getTransforms() {
+        Transform3d stage0 = new Transform3d(VisualizerConstants.STAGE0_ZERO, new Rotation3d(0, -Units.degreesToRadians(pivotLigament.getAngle()+90), 0));
+        Transform3d stage1 = stage0.plus(new Transform3d(carriageLigament.getLength()-Units.inchesToMeters(carriageOffset), 0, 0, Rotation3d.kZero));
+        Transform3d wrist = stage1.plus(new Transform3d(
+                VisualizerConstants.WRIST_OFFSET,
+                new Rotation3d(0, -Units.degreesToRadians(wristLigament1.getAngle()-wristOffset+55), 0)));
+
+        return new Transform3d[] {stage0, stage1, wrist};
     }
 }

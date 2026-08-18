@@ -81,8 +81,8 @@ public class TelescopeIOSim extends TelescopeIOTalonFX {
         // armPhysicsSim.setInputVoltage(arm1SimState.getMotorVoltage());
         armPhysicsSim.setInputVoltage((arm1SimState.getMotorVoltage() + arm2SimState.getMotorVoltage()) / 2);
 
-        pivotPhysicsSim.update(Constants.UPDATE_PERIOD_SEC);
-        armPhysicsSim.update(Constants.UPDATE_PERIOD_SEC);
+        pivotPhysicsSim.update(Constants.LOOP_PERIOD_SEC);
+        armPhysicsSim.update(Constants.LOOP_PERIOD_SEC);
 
         pivotPhysicsSim.setCGRadius(estimateCGRadius(armPhysicsSim.getPosition()));
         pivotPhysicsSim.setMOI(estimateMOI(armPhysicsSim.getPosition()));
