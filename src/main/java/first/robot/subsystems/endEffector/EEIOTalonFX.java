@@ -1,6 +1,7 @@
 package first.robot.subsystems.endEffector;
 
 import org.wpilib.math.util.Units;
+import org.wpilib.util.Color;
 
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -33,6 +34,8 @@ public abstract class EEIOTalonFX implements EEIO {
     public void updateInputs(EEIOInputs inputs) {
         inputs.wristData = wrist.getData();
         inputs.rollerData = roller.getData();
+
+        inputs.colorReading = getColorReading();
     }
 
     public void setWristAngleDeg(double angleDeg) {
@@ -43,7 +46,6 @@ public abstract class EEIOTalonFX implements EEIO {
     public void setWristAngleDeg(double angleDeg, double ff) {
         double motorSetpoint = Units.degreesToRotations(angleDeg) * EEConstants.WRIST_REDUCTION;
         wrist.setControl(wristPositionVoltage.withPosition(motorSetpoint).withFeedForward(ff));
-
     }
 
     public void setRollerVoltage(double voltage) {

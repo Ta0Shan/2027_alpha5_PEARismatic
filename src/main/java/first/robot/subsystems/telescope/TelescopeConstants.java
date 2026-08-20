@@ -36,16 +36,13 @@ public class TelescopeConstants {
         // CLUMB(90., -9.6064291292), // 90 deg, weird number because gearing's swapped atp
         LAUNCHER(0., 0.); // 0 deg
 
-        private final double pivotAngleDeg;
-        private final double armExtensionInches;
+        public final double pivotAngleDeg;
+        public final double armExtensionInches;
 
         private TelescopeStates(double pivotAngleDeg, double armExtensionInches) {
             this.pivotAngleDeg = pivotAngleDeg;
             this.armExtensionInches = armExtensionInches;
         }
-
-        public double getPivotAngleDeg() {return pivotAngleDeg;}
-        public double getArmExtensionInches() {return armExtensionInches;}
     }
 
     public class PivotConstants {

@@ -187,7 +187,7 @@ public class MechVisualizer {
         carriageLigament.setLength(Units.inchesToMeters(armExtensionInches + carriageOffset));
         wristLigament1.setAngle(EEConstants.STARTING_ANGLE_OFFSET_FROM_PARALLEL_DEG - wristAngleDegs + wristOffset);
         wristLigament2.setAngle(EEConstants.STARTING_ANGLE_OFFSET_FROM_PARALLEL_DEG - wristAngleDegs - wristOffset);
-        flywheelPosition += Units.rotationsToDegrees(launcherRPS/10) * Constants.LOOP_PERIOD_SEC;
+        flywheelPosition += Units.rotationsToDegrees(launcherRPS/5) * Constants.LOOP_PERIOD_SEC;
         if (launcherRPS == 0) flywheelPosition = 0;
         flywheelLigament1.setAngle(-flywheelPosition);
         flywheelLigament2.setAngle(flywheelPosition);

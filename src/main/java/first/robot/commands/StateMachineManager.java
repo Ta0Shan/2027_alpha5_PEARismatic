@@ -96,9 +96,9 @@ public class StateMachineManager {
             State IDLING = stateMachine.addState(superstructure.hold());
 
             // alignment states / in-betweens
-            State SHUTTLE = stateMachine.addState(superstructure.shuttle()); // TODO: pose when akit and drive works
+            State SHUTTLE = stateMachine.addState(Command.parallel(superstructure.shuttle(), drivetrain.shuttleAlign()).named("SHUTTLE")); // TODO: pose when akit and drive works
             State COLORED = stateMachine.addState(superstructure.coloredAlign()); // TODO: ditto ^^^
-            State NEUTRAL = stateMachine.addState(superstructure.neutralAlign()); // TODO: ditto ^^^
+            State NEUTRAL = stateMachine.addState(drivetrain.neutralAlign(() -> superstructure.getSuperstructureState())); // TODO: ditto ^^^
 
             // scoring states / finals
             State SCORE = stateMachine.addState(superstructure.score());
@@ -134,7 +134,7 @@ public class StateMachineManager {
 
             stateMachine.switchFromAny(L1_FRONT, L1_BACK, L2_FRONT, L2_BACK, CLASSIFIER_FRONT, CLASSIFIER_BACK, IDLING)
                         .to(NEUTRAL).when(secondaryScoreTrigger.risingEdge());
-            // both primary and secondary score triggers can CLASSIFY - case will be handled in command factory
+            // NEUTRAL is mapped to secondaryScore because COLORED earns more points, would change if driver shows preference to one config or the other
             
             // if the driver second guesses while aligning, letting go of the score trigger will enter a IDLING state
             // IDLING maintains current setpoints so driver can continue or pivot if they want to
@@ -174,7 +174,11 @@ public class StateMachineManager {
         State DRIVE_CIRCLE = functional.addState(Command.sequence(
             drivetrain.driveCircle(),
             superstructure.pause(1)
-        ).withAutomaticName()); // TODO: write drive command
+        ).withAutomaticName());
+        State SPIN = functional.addState(Command.sequence(
+            drivetrain.spin(5),
+            superstructure.pause(1)
+        ).withAutomaticName());
         State INTAKE_OUTTAKE = functional.addState(Command.sequence(
             superstructure.instantApplyState(SuperstructureStates.INTAKING),
             superstructure.pause(1),
@@ -213,7 +217,8 @@ public class StateMachineManager {
         functional.setInitialState(DRIVE_CIRCLE);
         // functional.setInitialState(INTAKE_OUTTAKE);
 
-        DRIVE_CIRCLE.switchTo(INTAKE_OUTTAKE).whenComplete();
+        DRIVE_CIRCLE.switchTo(SPIN).whenComplete();
+        SPIN.switchTo(INTAKE_OUTTAKE).whenComplete();
         INTAKE_OUTTAKE.switchTo(L1_FRONT_BACK).whenComplete();
         L1_FRONT_BACK.switchTo(L2_FRONT_BACK).whenComplete();
         L2_FRONT_BACK.switchTo(CLASSIFIER_FRONT_BACK).whenComplete();

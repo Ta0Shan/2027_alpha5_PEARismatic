@@ -1,6 +1,8 @@
 package first.robot.subsystems.endEffector;
 
+import org.wpilib.hardware.bus.I2C.Port;
 import org.wpilib.math.util.Units;
+import org.wpilib.util.Color;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -22,14 +24,10 @@ public class EEConstants {
         CLASSIFIER_BACK(55)
         ;
 
-        private final double angleFromArmDeg;
+        public final double angleDeg;
 
-        private WristStates(double angleFromArmDeg) {
-            this.angleFromArmDeg = angleFromArmDeg;
-        }
-
-        public double getAngleDeg() {
-            return angleFromArmDeg;
+        private WristStates(double angleFromStowDeg) {
+            this.angleDeg = angleFromStowDeg;
         }
     }
 
@@ -38,21 +36,29 @@ public class EEConstants {
         FWD(5),
         REV(-5),
         FAST_FWD(10),
-        FAST_REV(-10);
+        FAST_REV(-10)
+        ;
 
-        private final double voltage;
+        public final double voltage;
 
         private RollerStates(double voltage) {
             this.voltage = voltage;
         }
 
-        public double getVoltage() {return voltage;}
     }
 
     public static final CANBus CAN_BUS = Constants.SUPERSTRUCTURE_CAN_BUS;
 
     public static final int WRIST_ID = 51;
     public static final int ROLLERS_ID = 52;
+
+    public static final Port COLOR_SENSOR_PORT = Port.PORT_0;
+    public static final Color GREEN = new Color(0, 255, 0);    // #00ff00
+    public static final Color YELLOW = new Color(255, 255, 0); // #ffff00
+    public static final Color ORANGE = new Color(255, 165, 0); // #ffa500
+    public static final Color PURPLE = new Color(128, 0, 128); // #800080
+
+    public static final Color[] CRYSTAL_COLORS = {GREEN, YELLOW, ORANGE, PURPLE};
 
     public static final double WRIST_REDUCTION = (32.0/12.0) * (32.0/12.0) * (50.0/12.0); // (36.0 / 8.0) * (38.0/14.0) * (36.0/14.0) * (20.0/16.0);
     public static final double ROLLER_REDUCTION = (22.0/22.0) * (36.0/16.0);

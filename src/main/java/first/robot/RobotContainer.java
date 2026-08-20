@@ -4,8 +4,12 @@
 
 package first.robot;
 
+import static org.wpilib.units.Units.Seconds;
+
 import org.wpilib.command3.Command;
 import org.wpilib.command3.button.CommandNiDsXboxController;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.smartdashboard.SendableChooser;
 import org.wpilib.smartdashboard.SmartDashboard;
 
@@ -117,7 +121,7 @@ public class RobotContainer {
       () -> driver.getLeftX(),
       () -> driver.getLeftY(),
       () -> driver.getRightX(),
-      driver.start(),
+      driver.b(),
       driver.leftBumper(),
       driver.leftTrigger(0.9),
       driver.x(),
@@ -137,6 +141,16 @@ public class RobotContainer {
     // autoChooser.addOption("Auto Name", new PathPlannerAuto("Auto Nickname", bool inversion));
 
     SmartDashboard.putData("Autonomous Command", autoChooser);
+  }
+
+  public void teleopBindings() {
+    // all direct robot controls are bound in the state machine already
+    driver.start().onTrue(Command.requiring(drive).executing(co -> {
+      drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d()));
+    }).named("RESET HEADING"));
+
+    operator.povUp().whileTrue(launcher.adjustRPS(1 / Constants.LOOP_FREQ_HZ));
+    operator.povDown().whileTrue(launcher.adjustRPS(-1 / Constants.LOOP_FREQ_HZ));
   }
 
   public Command getAutonomousCommand() {

@@ -17,7 +17,6 @@ import first.robot.subsystems.telescope.TelescopeConstants.TelescopeStates;
 
 public class Telescope extends Mechanism {
     private final TelescopeIO io;
-    private final Debouncer setpointDebouncer = new Debouncer(0.2);
 
     private final TelescopeIOInputsAutoLogged inputs = new TelescopeIOInputsAutoLogged();
 
@@ -31,7 +30,7 @@ public class Telescope extends Mechanism {
     public void logIO() {
         io.updateInputs(inputs);
         Logger.processInputs("Telescope", inputs);
-        Logger.recordOutput("Mechanisms/Telescope/Pivot/Setpoint Angle Deg", state.getPivotAngleDeg());
+        Logger.recordOutput("Mechanisms/Telescope/Pivot/Setpoint Angle Deg", state.pivotAngleDeg);
         Logger.recordOutput("Mechanisms/Telescope/Pivot/Angle Deg", getPivotAngleDeg());
         Logger.recordOutput("Mechanisms/Telescope/Pivot/Abs Encoder Angle Deg", Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition));
 
@@ -42,14 +41,15 @@ public class Telescope extends Mechanism {
 
     public Command applyState(TelescopeStates state) {
         return run(co -> {
+            Debouncer setpointDebouncer = new Debouncer(0.2);
             this.state = state;
             while(setpointDebouncer.calculate(
-                    Math.abs((state.getPivotAngleDeg() - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition))) > 0.5
+                    Math.abs((state.pivotAngleDeg - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition))) > 0.5
                     || Math.abs(getArmSetpoint(state) - getArmExtensionInches()) > 0.05)
                 ) {
                 // functions as a timer, cmd gives up control when it's close to its setpoint
-                io.setPivotAngleDeg(state.getPivotAngleDeg());
-                io.setArmExtensionIn(state==TelescopeStates.CLUMB, state.getArmExtensionInches());
+                io.setPivotAngleDeg(state.pivotAngleDeg);
+                io.setArmExtensionIn(state==TelescopeStates.CLUMB, state.armExtensionInches);
                 co.yield();
             }
             io.shiftDogs(state == TelescopeStates.CLIMB_RAISED);
@@ -87,7 +87,7 @@ public class Telescope extends Mechanism {
 
     private double getArmSetpoint(TelescopeStates state) {
         // return (state==TelescopeStates.CLUMB ? 2 : state.getArmExtensionInches());
-        return state.getArmExtensionInches();
+        return state.armExtensionInches;
     }
 
     private double mean(double... values) {

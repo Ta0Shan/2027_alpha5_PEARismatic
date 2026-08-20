@@ -40,7 +40,7 @@ public class Robot extends LoggedRobot {
   public void robotPeriodic() {
     scheduler.run();
 
-    Command[] runningCommands = scheduler.getRunningCommands().toArray(Command[]::new);
+    Command[] runningCommands = scheduler.getRunningCommands().toArray(new Command[] {});
     String[] names = new String[runningCommands.length];
     for (int i = 0; i < runningCommands.length; i++) {
       names[i] = runningCommands[i].name();
@@ -81,7 +81,9 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    scheduler.cancelAll();
+  }
 
   @Override
   public void disabledPeriodic() {}
@@ -111,10 +113,12 @@ public class Robot extends LoggedRobot {
   @Override
   public void teleopInit() {
     scheduler.schedule(robotContainer.teleopSM());
+    robotContainer.teleopBindings();
   }
 
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+  }
 
   @Override
   public void teleopExit() {

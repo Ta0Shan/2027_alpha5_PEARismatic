@@ -57,23 +57,24 @@ public class Drive extends Mechanism {
               Math.hypot(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
               Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
 
+  // AutoBuilder for Pathplanner requires a Subsystem which is cmdv2 specific
   // PathPlanner config constants
-  private static final double ROBOT_MASS_KG = 74.088;
-  private static final double ROBOT_MOI = 6.883;
-  private static final double WHEEL_COF = 1.2;
-  private static final RobotConfig PP_CONFIG = // AutoBuilder for Pathplanner requires a Subsystem which is cmdv2 specific
-      new RobotConfig(
-          ROBOT_MASS_KG,
-          ROBOT_MOI,
-          new ModuleConfig(
-              TunerConstants.FrontLeft.WheelRadius,
-              TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
-              WHEEL_COF,
-              DCMotor.getKrakenX60Foc(1)
-                  .withReduction(TunerConstants.FrontLeft.DriveMotorGearRatio),
-              TunerConstants.FrontLeft.SlipCurrent,
-              1),
-          getModuleTranslations());
+  // private static final double ROBOT_MASS_KG = 74.088;
+  // private static final double ROBOT_MOI = 6.883;
+  // private static final double WHEEL_COF = 1.2;
+  // private static final RobotConfig PP_CONFIG = 
+  //     new RobotConfig(
+  //         ROBOT_MASS_KG,
+  //         ROBOT_MOI,
+  //         new ModuleConfig(
+  //             TunerConstants.FrontLeft.WheelRadius,
+  //             TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
+  //             WHEEL_COF,
+  //             DCMotor.getKrakenX60Foc(1)
+  //                 .withReduction(TunerConstants.FrontLeft.DriveMotorGearRatio),
+  //             TunerConstants.FrontLeft.SlipCurrent,
+  //             1),
+  //         getModuleTranslations());
 
   static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
@@ -209,48 +210,57 @@ public class Drive extends Mechanism {
    *
    * @param velocities Speeds in meters/sec
    */
-  public void runVelocity(ChassisVelocities velocities) {
-    // Calculate module setpoints
-    ChassisVelocities discreteSpeeds = velocities.discretize(0.02);
-    SwerveModuleVelocity[] setpointVelocities = kinematics.toSwerveModuleVelocities(discreteSpeeds);
-    SwerveModuleVelocity[] desaturatedVelocities = SwerveDriveKinematics.desaturateWheelVelocities(setpointVelocities, TunerConstants.kSpeedAt12Volts);
+  public Command runVelocity(ChassisVelocities velocities) {
+    return run(co -> {
+      // Calculate module setpoints
+      ChassisVelocities discreteSpeeds = velocities.discretize(0.02);
+      SwerveModuleVelocity[] setpointVelocities = kinematics.toSwerveModuleVelocities(discreteSpeeds);
+      SwerveModuleVelocity[] desaturatedVelocities = SwerveDriveKinematics.desaturateWheelVelocities(setpointVelocities, TunerConstants.kSpeedAt12Volts);
 
-    // Log unoptimized setpoints and setpoint speeds
-    Logger.recordOutput("SwerveStates/Setpoints", desaturatedVelocities);
-    Logger.recordOutput("SwerveChassisSpeeds/Setpoints", discreteSpeeds);
+      // Log unoptimized setpoints and setpoint speeds
+      Logger.recordOutput("SwerveStates/Setpoints", desaturatedVelocities);
+      Logger.recordOutput("SwerveChassisSpeeds/Setpoints", discreteSpeeds);
 
-    // Send setpoints to modules
-    for (int i = 0; i < 4; i++) {
-      modules[i].runSetpoint(setpointVelocities[i]);
-    }
+      // Send setpoints to modules
+      for (int i = 0; i < 4; i++) {
+        modules[i].runSetpoint(setpointVelocities[i]);
+      }
 
-    // Log optimized setpoints (runSetpoint mutates each state)
-    Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointVelocities);
+      // Log optimized setpoints (runSetpoint mutates each state)
+      Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointVelocities);
+  }).named("RUN VELOCITIES");
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
-  public void runCharacterization(double output) {
-    for (int i = 0; i < 4; i++) {
-      modules[i].runCharacterization(output);
-    }
+  public Command runCharacterization(double output) {
+    return Command.race(
+      run(co -> {
+        for(int i = 0; i < 4; i++) {
+          modules[i].runCharacterization(output);
+        }
+      }).named("MODULE CHARACTERIZATION"),
+      Command.noRequirements(co -> {co.wait(Seconds.of(1.));}).named("TIMEOUT 1s")
+    ).withAutomaticName();
   }
 
   /** Stops the drive. */
-  public void stop() {
-    runVelocity(new ChassisVelocities());
+  public Command stop() {
+    return runVelocity(new ChassisVelocities());
   }
 
   /**
    * Stops the drive and turns the modules to an X arrangement to resist movement. The modules will
    * return to their normal orientations the next time a nonzero velocity is requested.
    */
-  public void stopWithX() {
-    Rotation2d[] headings = new Rotation2d[4];
-    for (int i = 0; i < 4; i++) {
-      headings[i] = getModuleTranslations()[i].getAngle();
-    }
-    kinematics.resetHeadings(headings);
-    stop();
+  public Command stopWithX() {
+    return run(co -> {
+      Rotation2d[] headings = new Rotation2d[4];
+      for (int i = 0; i < 4; i++) {
+        headings[i] = getModuleTranslations()[i].getAngle();
+      }
+      kinematics.resetHeadings(headings);
+      co.await(stop());
+  }).named("STOP X");
   }
 
   // /** Returns a command to run a quasistatic test in the specified direction. */
