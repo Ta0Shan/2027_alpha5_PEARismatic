@@ -14,8 +14,8 @@ public abstract class EEIOTalonFX implements EEIO {
     protected final PearadoxTalonFX wrist;
     protected final PearadoxTalonFX roller;
 
-    protected final PositionVoltage wristPositionVoltage;
-    protected final VoltageOut rollerVoltageOut;
+    protected final PositionVoltage positionVoltage;
+    protected final VoltageOut voltageOut;
 
     public EEIOTalonFX() {
         wrist = new PearadoxTalonFX(EEConstants.WRIST_ID,
@@ -27,8 +27,8 @@ public abstract class EEIOTalonFX implements EEIO {
             EEConstants.ROLLER_CONFIG(),
             Subsystem.EE_ROLLERS);
 
-        wristPositionVoltage = new PositionVoltage(0);
-        rollerVoltageOut = new VoltageOut(0);
+        positionVoltage = new PositionVoltage(0);
+        voltageOut = new VoltageOut(0);
     }
 
     public void updateInputs(EEIOInputs inputs) {
@@ -40,15 +40,15 @@ public abstract class EEIOTalonFX implements EEIO {
 
     public void setWristAngleDeg(double angleDeg) {
         double motorSetpoint = Units.degreesToRotations(angleDeg) * EEConstants.WRIST_REDUCTION;
-        wrist.setControl(wristPositionVoltage.withPosition(motorSetpoint));
+        wrist.setControl(positionVoltage.withPosition(motorSetpoint));
     }
     
     public void setWristAngleDeg(double angleDeg, double ff) {
         double motorSetpoint = Units.degreesToRotations(angleDeg) * EEConstants.WRIST_REDUCTION;
-        wrist.setControl(wristPositionVoltage.withPosition(motorSetpoint).withFeedForward(ff));
+        wrist.setControl(positionVoltage.withPosition(motorSetpoint).withFeedForward(ff));
     }
 
     public void setRollerVoltage(double voltage) {
-        roller.setControl(rollerVoltageOut.withOutput(voltage));
+        roller.setControl(voltageOut.withOutput(voltage));
     }
 }

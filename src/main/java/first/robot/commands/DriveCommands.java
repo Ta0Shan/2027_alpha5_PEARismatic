@@ -23,6 +23,7 @@ import org.wpilib.system.Timer;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.command3.Command;
 
+import first.robot.Constants;
 import first.robot.Constants.FieldConstants;
 import first.robot.Constants.SuperstructureStates;
 import first.robot.Constants.FieldConstants.BlueFieldConstants;
@@ -48,13 +49,13 @@ public class DriveCommands {
     private static final double DEADBAND = 0.1;
     private static final double ANGLE_KP = 7.0;
     private static final double ANGLE_KD = 0.4;
-    private static final double ANGLE_MAX_VELOCITY = Units.degreesToRadians(540);
+    private static final double ANGLE_MAX_VELOCITY = Units.degreesToRadians(360);
     private static final double ANGLE_MAX_ACCELERATION = Units.degreesToRadians(720);
 
     private static final double DRIVE_kP = 7.0;
     private static final double DRIVE_kD = 0.4;
-    private static final double DRIVE_MAX_VELOCITY = Units.degreesToRadians(540);
-    private static final double DRIVE_MAX_ACCELERATION = Units.degreesToRadians(720);
+    private static final double DRIVE_MAX_VELOCITY = 3.0; // m/s
+    private static final double DRIVE_MAX_ACCELERATION = 10.0; // m/s/s
 
     // Characterization has been commented because sim is ideal and ideally everything works
     private static final double FF_START_DELAY = 2.0; // Secs
@@ -111,7 +112,9 @@ public class DriveCommands {
                     velocities.toRobotRelative(
                         isFlipped
                         ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                        : drive.getRotation()));
+                        : drive.getRotation()
+                    )
+                );
                 co.yield();
             }
         }).named("JOYSTICK DRIVE");
@@ -164,13 +167,15 @@ public class DriveCommands {
                     velocities.toRobotRelative(
                         isFlipped
                         ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                        : drive.getRotation()));
+                        : drive.getRotation()
+                    )
+                );
                 co.yield();
             }
-        }).named("JOYSTICK DRIVE AT ANGLE " + Math.round(rotationSupplier.get().getDegrees() * 100.0) / 100.0);
+        }).named("JOYSTICK DRIVE AT ANGLE " + Math.round(rotationSupplier.get().getDegrees() * 100.0) / 100.0 + "°");
     }
 
-    public Command goToPose(Supplier<Pose2d> pose) {
+    public Command goToPose(Pose2d pose) {
         return drive.run(co -> {
             // Create PID controller
             ProfiledPIDController angleController =
@@ -192,31 +197,31 @@ public class DriveCommands {
                     DRIVE_kD,
                     new TrapezoidProfile.Constraints(DRIVE_MAX_VELOCITY, DRIVE_MAX_ACCELERATION));
             
-            driveController.reset(pose.get().getTranslation().minus(drive.getPose().getTranslation()).getNorm()); // "current position"
+            driveController.reset(pose.getTranslation().minus(drive.getPose().getTranslation()).getNorm()); // "current position"
             // we set the position this way because the goal (pose) is thus (0, 0): that way, the drive pose IS the error
             driveController.setTolerance(Units.inchesToMeters(5));
 
-            while(!driveController.atGoal() && !angleController.atGoal()) {
+            while(!driveController.atGoal() || !angleController.atGoal()) {
                 double omega = 
                     angleController.calculate(
                         drive.getRotation().getRadians(),
-                        pose.get().getRotation().getRadians());
+                        pose.getRotation().getRadians());
                 
                 double throttle = 
                     driveController.calculate(
-                        pose.get().minus(drive.getPose()).getTranslation().getNorm(),
-                        pose.get().getTranslation().getNorm());
+                        pose.minus(drive.getPose()).getTranslation().getNorm(),
+                        pose.getTranslation().getNorm());
                 
                 Translation2d velocity = new Translation2d(
                     throttle,
-                    pose.get().minus(drive.getPose()).getRotation());
+                    pose.minus(drive.getPose()).getRotation());
 
-                co.fork(drive.runVelocity(new ChassisVelocities(velocity.getX(), velocity.getY(), omega)));
+                drive.runVelocity(new ChassisVelocities(velocity.getX(), velocity.getY(), omega));
 
                 co.yield();
             }
 
-        }).named(String.format("GO TO (%.2f, %.2f) AT %.2f°", pose.get().getX(), pose.get().getY(), pose.get().getRotation().getDegrees()));
+        }).named(String.format("GO TO (%.2f, %.2f) AT %.2f°", pose.getX(), pose.getY(), pose.getRotation().getDegrees()));
     }
 
     public Command shuttleAlign() {
@@ -229,7 +234,28 @@ public class DriveCommands {
             
             Rotation2d targetRotation = targetPose.minus(currentPose).getAngle().minus(Rotation2d.k180deg);
             
-            co.await(goToPose(() -> new Pose2d(drive.getPose().getTranslation(), targetRotation)));
+            
+            ProfiledPIDController angleController =
+                new ProfiledPIDController(
+                    ANGLE_KP,
+                    0.0,
+                    ANGLE_KD,
+                    new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+            angleController.enableContinuousInput(-Math.PI, Math.PI);
+            angleController.setTolerance(Units.degreesToRadians(5.));
+
+            while(!angleController.atGoal()) {
+                double omega = angleController.calculate(
+                    drive.getRotation().getRadians(),
+                    targetRotation.getRadians()
+                );
+
+                ChassisVelocities velocity = new ChassisVelocities(0, 0, omega);
+
+                drive.runVelocity(velocity);
+
+                co.yield();
+            }
         }).named("SHUTTLE ALIGN");
     }
 
@@ -244,7 +270,7 @@ public class DriveCommands {
                 : (isL1 ? BlueFieldConstants.LOWER_SHAFTS : BlueFieldConstants.UPPER_SHAFTS)
             )).plus(isL1 ? FieldConstants.LSHAFT_WALL_DISTANCE : FieldConstants.USHAFT_WALL_DISTANCE)
             ;
-            co.await(goToPose(() -> closestPose));
+            co.await(goToPose(closestPose));
         }).named("NEUTAL ALIGN");
     }
 
@@ -284,38 +310,47 @@ public class DriveCommands {
                 }
             }
             Pose2d closestPose = drive.getPose().nearest(Arrays.asList(validBranches));
-            co.await(goToPose(() -> closestPose));
+            co.await(goToPose(closestPose));
         }).named("");
     }
 
-
     public Command driveCircle() {
         return drive.run(co -> {
-            Rotation2d direction = Rotation2d.kZero;
+            Rotation2d direction = Rotation2d.fromDegrees(1);
             Translation2d linearVelocity = new Translation2d(0.5, direction);
 
-            do {
+            while(!direction.equals(Rotation2d.kZero)) {
                 ChassisVelocities velocity = new ChassisVelocities(
                     linearVelocity.getX(),
                     linearVelocity.getY(),
                     0.0);
                 
-                co.fork(drive.runVelocity(velocity));
+                drive.runVelocity(velocity);
 
-                direction = direction.plus(Rotation2d.fromDegrees(1));
+                direction = direction.plus(Rotation2d.fromDegrees(0.5));
                 linearVelocity = new Translation2d(0.5, direction);
-            } while(!direction.equals(Rotation2d.kZero));
+                co.yield();
+            }
         }).named("DRIVE CIRCLE");
     }
 
     public Command spin(double time) {
         return drive.run(co -> {
-            co.fork(drive.runVelocity(new ChassisVelocities(0, 0, 0.5)));
+            drive.runVelocity(new ChassisVelocities(0, 0, 1));
             co.wait(Seconds.of(time));
         }).named("SPIN " + time + "s");
     }
 
+
+
+
+
+
     // CHARACTERIZATION BELOW =====================================================================
+
+
+
+
 
     private List<Double> velocitySamples = new LinkedList<>();
     private List<Double> voltageSamples = new LinkedList<>();
@@ -333,7 +368,7 @@ public class DriveCommands {
             voltageSamples.clear();
 
             // Allow modules to orient
-            co.fork(drive.runCharacterization(0.0));
+            drive.runCharacterization(0.0);
 
             // Start timer
             timer.restart();        
@@ -341,7 +376,7 @@ public class DriveCommands {
             // Accelerate and gather data
             while(true) {
                 double voltage = timer.get() * FF_RAMP_RATE;
-                co.fork(drive.runCharacterization(voltage));
+                drive.runCharacterization(voltage);
                 velocitySamples.add(drive.getFFCharacterizationVelocity());
                 voltageSamples.add(voltage);
                 co.yield();
@@ -389,7 +424,8 @@ public class DriveCommands {
                         // Turn in place, accelerating up to full speed
                         while(true) {
                             double speed = limiter.calculate(WHEEL_RADIUS_MAX_VELOCITY);
-                            co2.await(drive.runVelocity(new ChassisVelocities(0, 0, speed)));
+                            drive.runVelocity(new ChassisVelocities(0, 0, speed));
+                            co2.yield();
                         }
                     }).named("TURN IN PLACE"),
 

@@ -88,6 +88,9 @@ public class TelescopeConstants {
             return config;
         }
 
+        public static final double MIN_ANGLE_DEG = 0.0;
+        public static final double MAX_ANGLE_DEG = 160.0;
+
     }
 
     public class ArmConstants {
@@ -103,6 +106,7 @@ public class TelescopeConstants {
         public static final int SERVO_HUB_ID = 33;
         public static final int EXTENSION_PULSE_WIDTH_uS = 2500; // TODO: should be max clockwise
         public static final int CLIMB_PULSE_WIDTH_uS = 500; // TODO: should be max counter-clockwise
+        // the dog shifter only makes like a 90* turn so it should be relatively quick either way
 
         public static final TalonFXConfiguration CONFIG() {
             TalonFXConfiguration config = new TalonFXConfiguration();

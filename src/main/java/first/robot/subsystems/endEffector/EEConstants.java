@@ -52,6 +52,9 @@ public class EEConstants {
     public static final int WRIST_ID = 51;
     public static final int ROLLERS_ID = 52;
 
+    public static final double MIN_ANGLE_DEG = 0.0;
+    public static final double MAX_ANGLE_DEG = 201.0;
+
     public static final Port COLOR_SENSOR_PORT = Port.PORT_0;
     public static final Color GREEN = new Color(0, 255, 0);    // #00ff00
     public static final Color YELLOW = new Color(255, 255, 0); // #ffff00
@@ -62,8 +65,8 @@ public class EEConstants {
 
     public static final double WRIST_REDUCTION = (32.0/12.0) * (32.0/12.0) * (50.0/12.0); // (36.0 / 8.0) * (38.0/14.0) * (36.0/14.0) * (20.0/16.0);
     public static final double ROLLER_REDUCTION = (22.0/22.0) * (36.0/16.0);
-    // public static final double FURTHER_CW_ROLLER_REDUCTION = (32.0/16.0) * (30.0/24.0);
-    // public static final double FURTHER_CCW_ROLLER_REDUCTION = (32.0/16.0) * (36.0/24.0) * (30.0/30.0); // unused bc voltage control
+
+    public static final double ROLLER_CIRCUMF_METERS = Units.inchesToMeters(Math.PI * 2.0);
 
     public static final TalonFXConfiguration WRIST_CONFIG() {
         TalonFXConfiguration config = new TalonFXConfiguration();

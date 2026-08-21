@@ -6,8 +6,12 @@ package first.robot;
 
 import static org.wpilib.units.Units.Seconds;
 
+import java.util.ArrayList;
+
 import org.wpilib.command3.Command;
+import org.wpilib.command3.Trigger;
 import org.wpilib.command3.button.CommandNiDsXboxController;
+import org.wpilib.driverstation.NiDsXboxController;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.smartdashboard.SendableChooser;
@@ -45,6 +49,7 @@ public class RobotContainer {
 
   public final CommandNiDsXboxController driver;
   public final CommandNiDsXboxController operator;
+  private Trigger[] boundTriggers;
 
   private final SendableChooser<Command> autoChooser;
 
@@ -63,6 +68,7 @@ public class RobotContainer {
   public RobotContainer() {
     driver = new CommandNiDsXboxController(0);
     operator = new CommandNiDsXboxController(1);
+    boundTriggers = new Trigger[0];
 
     autoChooser = new SendableChooser<>();
 
@@ -119,7 +125,7 @@ public class RobotContainer {
       endEffector,
       drive,
       () -> driver.getLeftX(),
-      () -> driver.getLeftY(),
+      () -> -driver.getLeftY(),
       () -> driver.getRightX(),
       driver.b(),
       driver.leftBumper(),
@@ -149,8 +155,47 @@ public class RobotContainer {
       drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d()));
     }).named("RESET HEADING"));
 
-    operator.povUp().whileTrue(launcher.adjustRPS(1 / Constants.LOOP_FREQ_HZ));
-    operator.povDown().whileTrue(launcher.adjustRPS(-1 / Constants.LOOP_FREQ_HZ));
+    Trigger operatorLeftYUp = new Trigger(() -> operator.getLeftY() < -0.9);
+    operatorLeftYUp.whileTrue(telescope.adjustAngleDeg(10 / Constants.LOOP_FREQ_HZ));
+    Trigger operatorLeftYDown = new Trigger(() -> operator.getLeftY() > 0.9);
+    operatorLeftYDown.whileTrue(telescope.adjustAngleDeg(-10 / Constants.LOOP_FREQ_HZ));
+    Trigger operatorRightYUp = new Trigger(() -> operator.getRightY() < -0.9);
+    operatorRightYUp.whileTrue(telescope.adjustExtensionIn(1.5 / Constants.LOOP_FREQ_HZ));
+    Trigger operatorRightYDown = new Trigger(() -> operator.getRightY() > 0.9);
+    operatorRightYDown.whileTrue(telescope.adjustExtensionIn(-1.5 / Constants.LOOP_FREQ_HZ));
+
+    operator.povUp().whileTrue(endEffector.adjustAngleDeg(10 / Constants.LOOP_FREQ_HZ));
+    operator.povDown().whileTrue(endEffector.adjustAngleDeg(-10 / Constants.LOOP_FREQ_HZ));
+    operator.povRight().whileTrue(endEffector.adjustVoltage(0.5 / Constants.LOOP_FREQ_HZ));
+    operator.povLeft().whileTrue(endEffector.adjustVoltage(-0.5 / Constants.LOOP_FREQ_HZ));
+
+    operator.rightBumper().whileTrue(launcher.adjustRPS(1 / Constants.LOOP_FREQ_HZ));
+    operator.leftBumper().whileTrue(launcher.adjustRPS(-1 / Constants.LOOP_FREQ_HZ));
+
+    boundTriggers = new Trigger[] {
+      driver.start(),
+      operatorLeftYUp,
+      operatorLeftYDown,
+      operatorRightYUp,
+      operatorRightYDown,
+      operator.povUp(),
+      operator.povDown(),
+      operator.povRight(),
+      operator.povLeft(),
+      operator.rightBumper(),
+      operator.leftBumper()
+    };
+  }
+
+  public void utilBindings() {
+    
+  }
+
+  public void unbindAll() {
+    for (Trigger trigger : boundTriggers) {
+      trigger.unbind();
+    }
+    boundTriggers = new Trigger[0];
   }
 
   public Command getAutonomousCommand() {

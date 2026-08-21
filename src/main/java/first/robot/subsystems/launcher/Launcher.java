@@ -15,7 +15,7 @@ public class Launcher extends Mechanism {
     @AutoLogOutput(key="Mechanisms/Launcher/State") private LauncherStates state = LauncherStates.OFF;
     @AutoLogOutput(key="Mechanisms/Launcher/Scoring State") private LauncherStates scoringState = LauncherStates.SELF_DIRECTING;
 
-    @AutoLogOutput(key="Mechanisms/Launcher/Raw RPS Target") private double rawMeanRPSTarget = 0.0;
+    @AutoLogOutput(key="Mechanisms/Launcher/Raw Target") private double rawMeanTarget = 0.0;
     @AutoLogOutput(key="Mechanisms/Launcher/Adjust") private double adjust = 0.0;
     @AutoLogOutput(key="Mechanisms/Launcher/True RPS Target") private double meanRPSTarget = 0.0;
 
@@ -53,8 +53,8 @@ public class Launcher extends Mechanism {
     public Command setLauncherRPS(double RPS) {
         if (state == LauncherStates.OFF) {return Command.noRequirements(co -> {}).named("LAUNCHER IS OFF");}
         return run(co -> {
-            rawMeanRPSTarget = RPS;
-            meanRPSTarget = rawMeanRPSTarget + adjust;
+            rawMeanTarget = RPS;
+            meanRPSTarget = rawMeanTarget + adjust;
             meanRPSTarget = (Math.abs(meanRPSTarget) < LauncherConstants.FLYWHEEL_MAX_SPEED_RPS ? meanRPSTarget : LauncherConstants.FLYWHEEL_MAX_SPEED_RPS);
             io.setLauncherRPS(meanRPSTarget);
             minimumErrorPercent = Math.abs(meanRPSTarget != 0 ? (meanRPSTarget - getMeanRPS()) / meanRPSTarget : 0) * 100;
@@ -70,7 +70,7 @@ public class Launcher extends Mechanism {
         return run(co -> {
             this.state = state;
             if(state == LauncherStates.OFF) {
-                rawMeanRPSTarget = 0.0;
+                rawMeanTarget = 0.0;
                 meanRPSTarget = 0.0;
                 io.setLauncherRPS(meanRPSTarget);
             }
@@ -85,10 +85,10 @@ public class Launcher extends Mechanism {
         return Command.noRequirements(co -> {
             while(true) {
                 adjust += by;
-                co.await(setLauncherRPS(rawMeanRPSTarget));
+                co.fork(setLauncherRPS(rawMeanTarget));
                 co.yield();
             }
-        }).named("ADJUST RPS");
+        }).named("ADJUST LAUNCHER RPS");
     }
 
     public LauncherStates getState() {

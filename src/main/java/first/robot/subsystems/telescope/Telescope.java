@@ -4,11 +4,14 @@
 
 package first.robot.subsystems.telescope;
 
+import static org.wpilib.units.Units.Seconds;
+
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command3.Command;
 import org.wpilib.command3.Mechanism;
 import org.wpilib.math.filter.Debouncer;
+import org.wpilib.math.filter.Debouncer.DebounceType;
 import org.wpilib.math.util.Units;
 
 import first.robot.subsystems.telescope.TelescopeConstants.ArmConstants;
@@ -21,6 +24,16 @@ public class Telescope extends Mechanism {
     private final TelescopeIOInputsAutoLogged inputs = new TelescopeIOInputsAutoLogged();
 
     @AutoLogOutput(key="Mechanisms/Telescope/State") private TelescopeStates state = TelescopeStates.HOME;
+
+    @AutoLogOutput(key="Mechanisms/Telescope/Arm/In Climb Sequence") private boolean isClimbing = false;
+    
+    @AutoLogOutput(key="Mechanisms/Telescope/Pivot/Raw Setpoint") private double rawAngle = 0.0;
+    @AutoLogOutput(key="Mechanisms/Telescope/Pivot/Adjust") private double angleAdjust = 0.0;
+    @AutoLogOutput(key="Mechanisms/Telescope/Pivot/True Setpoint") private double trueAngle = 0.0;
+    
+    @AutoLogOutput(key="Mechanisms/Telescope/Arm/Raw Setpoint") private double rawExtension = 0.0;
+    @AutoLogOutput(key="Mechanisms/Telescope/Arm/Adjust") private double extensionAdjust = 0.0;
+    @AutoLogOutput(key="Mechanisms/Telescope/Arm/True Setpoint") private double trueExtension = 0.0;
 
     /** Creates a new Telescope. */
     public Telescope(TelescopeIO io) {
@@ -36,24 +49,56 @@ public class Telescope extends Mechanism {
 
         Logger.recordOutput("Mechanisms/Telescope/Arm/Extension Inches", getArmExtensionInches());
         Logger.recordOutput("Mechanisms/Telescope/Arm/Setpoint Extension Inches", getArmSetpoint(state));
-        Logger.recordOutput("Mechanisms/Telescope/Arm/Dog Shifter State", (inputs.armServoAppliedPulseWidth == ArmConstants.CLIMB_PULSE_WIDTH_uS ? "climb" : "extension"));
+        Logger.recordOutput("Mechanisms/Telescope/Arm/Dog Shifter PW", inputs.armServoAppliedPulseWidth);
     }
 
     public Command applyState(TelescopeStates state) {
         return run(co -> {
-            Debouncer setpointDebouncer = new Debouncer(0.2);
+            Debouncer setpointDebouncer = new Debouncer(0.2, DebounceType.kFalling);
             this.state = state;
+            if (isClimbing && state != TelescopeStates.CLUMB) {
+                io.shiftDogs(state == TelescopeStates.CLIMB_RAISED);
+                isClimbing = false;
+                co.wait(Seconds.of(0.3));
+            } // if the driver switches from CLIMB back to HOME it un-engages the dog shifter to make sure extension still works properly
+                rawAngle = state.pivotAngleDeg;
+                rawExtension = state.armExtensionInches;
+                    trueAngle = rawAngle + angleAdjust;
+                    trueExtension = rawExtension + extensionAdjust;
+            io.setPivotAngleDeg(trueAngle);
+            io.setArmExtensionIn(state==TelescopeStates.CLUMB, trueExtension);
             while(setpointDebouncer.calculate(
                     Math.abs((state.pivotAngleDeg - Units.rotationsToDegrees(inputs.pivotAbsEncoderPosition))) > 0.5
                     || Math.abs(getArmSetpoint(state) - getArmExtensionInches()) > 0.05)
                 ) {
-                // functions as a timer, cmd gives up control when it's close to its setpoint
-                io.setPivotAngleDeg(state.pivotAngleDeg);
-                io.setArmExtensionIn(state==TelescopeStates.CLUMB, state.armExtensionInches);
+                // functions as a timer, cmd gives up control when it's close to its setpoint (within 0.5° and 0.05");
                 co.yield();
             }
-            io.shiftDogs(state == TelescopeStates.CLIMB_RAISED);
+            if (state == TelescopeStates.CLIMB_RAISED) {
+                io.shiftDogs(state == TelescopeStates.CLIMB_RAISED);
+                isClimbing = true;
+            } // engages the dog shifter
         }).named("TELE " + state.name());
+    }
+
+    public Command adjustAngleDeg(double by) {
+        return Command.noRequirements(co -> {
+            while(true) {
+                angleAdjust += by;
+                io.setPivotAngleDeg(Math.clamp(rawAngle + angleAdjust, PivotConstants.MIN_ANGLE_DEG, PivotConstants.MAX_ANGLE_DEG));
+                co.yield();
+            }
+        }).named("ADJUST TELE ANGLE");
+    }
+    
+    public Command adjustExtensionIn(double by) {
+        return Command.noRequirements(co -> {
+            while(true) {
+                extensionAdjust += by;
+                io.setArmExtensionIn(state==TelescopeStates.CLUMB, Math.clamp(rawExtension + extensionAdjust, 0, Units.metersToInches(ArmConstants.MAX_EXTENSION_METERS)));
+                co.yield();
+            }
+        }).named("ADJUST TELE EXTENSION");
     }
 
     public TelescopeStates getState() {
@@ -73,7 +118,7 @@ public class Telescope extends Mechanism {
         return mean(
             inputs.arm1Data.position(),
             inputs.arm2Data.position())
-            / (state == TelescopeStates.CLUMB ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION)
+            / (isClimbing ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION)
             // / (inputs.armServoAppliedPulseWidth == ArmConstants.CLIMB_PULSE_WIDTH_uS ? ArmConstants.CLIMB_REDUCTION : ArmConstants.EXTENSION_REDUCTION)
             // / ArmConstants.EXTENSION_REDUCTION
             * Units.metersToInches(ArmConstants.ROTOR_CIRCUMF_METERS)
