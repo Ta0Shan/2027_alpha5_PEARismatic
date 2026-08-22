@@ -9,6 +9,7 @@ import org.wpilib.math.util.Units;
 import org.wpilib.util.Color;
 
 import first.robot.subsystems.endEffector.EEConstants.WristStates;
+import first.robot.Constants.CrystalColor;
 import first.robot.subsystems.endEffector.EEConstants.RollerStates;
 
 public class EE extends Mechanism {
@@ -38,7 +39,7 @@ public class EE extends Mechanism {
             Logger.processInputs("End Effector", inputs);
 
             Logger.recordOutput("Mechanisms/End Effector/State", wristState.name() + " " + rollerState.name());
-            Logger.recordOutput("Mechanisms/End Effector/Crystal Color", hasCrystal() ? crystalColor() : "N/A");
+            Logger.recordOutput("Mechanisms/End Effector/Crystal Color", crystalColor());
 
             Logger.recordOutput("Mechanisms/End Effector/Wrist/Angle Deg", getWristAngleDeg());
             Logger.recordOutput("Mechanisms/End Effector/Wrist/Setpoint Deg", wristState.angleDeg);
@@ -114,22 +115,10 @@ public class EE extends Mechanism {
 
     @AutoLogOutput(key="Mechanisms/End Effector/Has Crystal")
     public boolean hasCrystal() {
-        return inputs.colorReading != Color.BLACK;
+        return inputs.colorReading != CrystalColor.NONE;
     }
 
     public String crystalColor() {
-        // return inputs.colorReading.toHexString();
-        switch(inputs.colorReading.toHexString()) {
-            case "#00ff00":
-                return "GREEN";
-            case "#ffff00":
-                return "YELLOW";
-            case "#ffa500":
-                return "ORANGE";
-            case "#800080":
-                return "PURPLE";
-            default:
-                return "BLACK";
-        }
+        return inputs.colorReading.name();
     }
 }

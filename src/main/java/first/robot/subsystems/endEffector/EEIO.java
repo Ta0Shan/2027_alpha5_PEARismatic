@@ -5,6 +5,7 @@ import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLog;
 import org.wpilib.util.Color;
 
+import first.robot.Constants.CrystalColor;
 import first.robot.util.PearadoxTalonFX.MotorData;
 
 public interface EEIO {
@@ -13,7 +14,7 @@ public interface EEIO {
         public MotorData wristData;
         public MotorData rollerData;
 
-        public Color colorReading;
+        public CrystalColor colorReading;
     }
 
     public default void updateInputs(EEIOInputs inputs) {}
@@ -24,5 +25,5 @@ public interface EEIO {
 
     public default void setRollerVoltage(double volts) {}
 
-    public default Color getColorReading() {return Color.BLACK;}
+    public default CrystalColor getColorReading() {return CrystalColor.NONE;}
 }

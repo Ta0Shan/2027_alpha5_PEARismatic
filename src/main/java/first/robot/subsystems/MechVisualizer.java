@@ -23,10 +23,6 @@ import first.robot.subsystems.telescope.TelescopeConstants.ArmConstants;
 
 public class MechVisualizer {
 
-    private final Telescope telescope;
-    private final Launcher launcher;
-    private final EE endEffector;
-
     private final Color8Bit idlerColor = new Color8Bit(Color.GOLDENROD);
     private final Color8Bit staticStageColor = new Color8Bit("#00994C");
     private final Color8Bit carriageLigamentColor = new Color8Bit("#00CC66");
@@ -151,34 +147,22 @@ public class MechVisualizer {
     );
     private double rollersPosition;
 
-    
-
-    static class VisualizerConstants {
-        public static final Translation3d STAGE0_ZERO = new Translation3d(-0.241300, 0, 0.377825);
-        public static final Translation3d WRIST_ZERO = new Translation3d(0.535083, 0, 0.238125);
-        public static final Translation3d WRIST_OFFSET = WRIST_ZERO.minus(STAGE0_ZERO);
-    }
-
-
-    public MechVisualizer(Telescope telescope, Launcher launcher, EE endEffector) {
-        this.telescope = telescope;
-        this.launcher = launcher;
-        this.endEffector = endEffector;
+    public MechVisualizer() {
         flywheelPosition = 0.0;
         rollersPosition = 0.0;
     }
 
-    public void updateVis() {
-        updateData(telescope.getPivotAngleDeg(),
-        telescope.getArmExtensionInches(),
-        endEffector.getWristAngleDeg(),
-        launcher.getMeanRPS(),
-        endEffector.getRollersRPS());
+    public void updateVis(double pivotAngleDegs,
+            double armExtensionInches,
+            double wristAngleDegs,
+            double launcherRPS,
+            double rollersRPS) {
+        updateMech(pivotAngleDegs, armExtensionInches, wristAngleDegs, launcherRPS, rollersRPS);
         Logger.recordOutput("Simulation/2d Visualizer", mech);
         Logger.recordOutput("Simulation/3d Components", getTransforms());
     }
 
-    private void updateData(double pivotAngleDegs,
+    private void updateMech(double pivotAngleDegs,
             double armExtensionInches,
             double wristAngleDegs,
             double launcherRPS,
@@ -195,6 +179,12 @@ public class MechVisualizer {
         if (rollersRPS == 0) rollersPosition = 0;
         rollerLigament1.setAngle(-rollersPosition);
         rollerLigament2.setAngle(rollersPosition);
+    }
+
+    static class VisualizerConstants {
+        public static final Translation3d STAGE0_ZERO = new Translation3d(-0.241300, 0, 0.377825);
+        public static final Translation3d WRIST_ZERO = new Translation3d(0.535083, 0, 0.238125);
+        public static final Translation3d WRIST_OFFSET = WRIST_ZERO.minus(STAGE0_ZERO);
     }
 
     private Transform3d[] getTransforms() {

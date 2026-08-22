@@ -138,7 +138,7 @@ public class RobotContainer {
       driver.rightTrigger(0.9)
     );
   
-    visualizer2d = new MechVisualizer(telescope, launcher, endEffector);
+    visualizer2d = new MechVisualizer();
 
     setUpAutonomousCommand();
   }
@@ -216,7 +216,15 @@ public class RobotContainer {
     launcher.logIO();
     endEffector.logIO();
     SMManager.logData();
-    if (Constants.currentMode!=Mode.REAL) visualizer2d.updateVis();
+    if (Constants.currentMode!=Mode.REAL) {
+      visualizer2d.updateVis(
+        telescope.getPivotAngleDeg(),
+        telescope.getArmExtensionInches(),
+        endEffector.getWristAngleDeg(),
+        launcher.getMeanRPS(),
+        endEffector.getRollersRPS()
+      );
+    }
     PhoenixUtil.refreshAll();
   }
 

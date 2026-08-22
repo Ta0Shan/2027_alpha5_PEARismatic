@@ -7,6 +7,8 @@ import com.revrobotics.ColorSensorV3.ColorSensorMeasurementRate;
 import com.revrobotics.ColorSensorV3.ColorSensorResolution;
 import com.revrobotics.ColorSensorV3.GainFactor;
 
+import first.robot.Constants.CrystalColor;
+
 public class EEIOReal extends EEIOTalonFX {
     // because CTRE is so nice, they make sim states, which means to simulate we only need to build on the
     // base type.
@@ -23,7 +25,7 @@ public class EEIOReal extends EEIOTalonFX {
             GainFactor.kGain3x);
     }
 
-    public Color getColorReading() {
+    public CrystalColor getColorReading() {
         Color reading = colorSensor.getColor();
         Color output = Color.BLACK;
         double minimumWeightDist = getWeightedDistance(reading, output);
@@ -34,7 +36,7 @@ public class EEIOReal extends EEIOTalonFX {
                 minimumWeightDist = weightedDist;
             }
         }
-        return output;
+        return CrystalColor.getFromHex(output.toHexString());
     }
 
     // cc GEMINI

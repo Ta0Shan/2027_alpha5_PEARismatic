@@ -132,7 +132,7 @@ public class Module {
     return new SwerveModulePosition(getPositionMeters(), getAngle());
   }
 
-  /** Returns the module state (turn angle and drive velocity). */
+  /** Returns the module velocity (turn angle and drive speed). */
   public SwerveModuleVelocity getState() {
     return new SwerveModuleVelocity(getVelocityMetersPerSec(), getAngle());
   }

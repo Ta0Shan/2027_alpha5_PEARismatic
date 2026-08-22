@@ -163,10 +163,10 @@ public class Drive extends Mechanism {
       }
     }
 
-    // Log empty setpoint states when disabled
+    // Log empty setpoint velocities when disabled
     if (DriverStationBackend.isDisabled()) {
-      Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleVelocity[] {});
-      Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleVelocity[] {});
+      Logger.recordOutput("SwerveVelocities/Setpoints", new SwerveModuleVelocity[] {});
+      Logger.recordOutput("SwerveVelocities/SetpointsOptimized", new SwerveModuleVelocity[] {});
     }
 
     // Update odometry
@@ -217,8 +217,8 @@ public class Drive extends Mechanism {
       SwerveModuleVelocity[] desaturatedVelocities = SwerveDriveKinematics.desaturateWheelVelocities(setpointVelocities, TunerConstants.kSpeedAt12Volts);
 
       // Log unoptimized setpoints and setpoint speeds
-      Logger.recordOutput("SwerveStates/Setpoints", desaturatedVelocities);
-      Logger.recordOutput("SwerveChassisSpeeds/Setpoints", discreteSpeeds);
+      Logger.recordOutput("SwerveVelocities/Setpoints", desaturatedVelocities);
+      Logger.recordOutput("SwerveChassisVelocities/Setpoints", discreteSpeeds);
 
       // Send setpoints to modules
       for (int i = 0; i < 4; i++) {
@@ -226,7 +226,7 @@ public class Drive extends Mechanism {
       }
 
       // Log optimized setpoints (runSetpoint mutates each state)
-      Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointVelocities);
+      Logger.recordOutput("SwerveVelocities/SetpointsOptimized", setpointVelocities);
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
@@ -266,23 +266,23 @@ public class Drive extends Mechanism {
   //   return run(() -> runCharacterization(0.0)).withTimeout(1.0).andThen(sysId.dynamic(direction));
   // }
 
-  /** Returns the module states (turn angles and drive velocities) for all of the modules. */
-  @AutoLogOutput(key = "SwerveStates/Measured")
+  /** Returns the module velocities (turn angles and drive speeds) for all of the modules. */
+  @AutoLogOutput(key = "SwerveVelocities/Measured")
   private SwerveModuleVelocity[] getModuleVelocities() {
-    SwerveModuleVelocity[] states = new SwerveModuleVelocity[4];
+    SwerveModuleVelocity[] velocities = new SwerveModuleVelocity[4];
     for (int i = 0; i < 4; i++) {
-      states[i] = modules[i].getState();
+      velocities[i] = modules[i].getState();
     }
-    return states;
+    return velocities;
   }
 
   /** Returns the module positions (turn angles and drive positions) for all of the modules. */
   private SwerveModulePosition[] getModulePositions() {
-    SwerveModulePosition[] states = new SwerveModulePosition[4];
+    SwerveModulePosition[] positions = new SwerveModulePosition[4];
     for (int i = 0; i < 4; i++) {
-      states[i] = modules[i].getPosition();
+      positions[i] = modules[i].getPosition();
     }
-    return states;
+    return positions;
   }
 
   /** Returns the measured chassis speeds of the robot. */

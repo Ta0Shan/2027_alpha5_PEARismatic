@@ -1,7 +1,7 @@
 {
   "name": "Crystal Caverns",
   "isFTC": false,
-  "coordinateSystem": "wall-blue",
+  "coordinateSystem": "center-red",
   "rotations": [
     {
       "axis": "x",
@@ -9,7 +9,7 @@
     },
     {
       "axis": "z",
-      "degrees": 0
+      "degrees": 180
     }
   ],
   "widthInches": 648.00,

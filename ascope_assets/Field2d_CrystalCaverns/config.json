@@ -2,7 +2,7 @@
   "name": "CrysalCaverns",
   "isFTC": false,
   "coordinateSystem":
-      "wall-blue",
+      "center-red",
   "sourceUrl": "",
   "topLeft": [99, 41],
   "bottomRight": [1474, 723],

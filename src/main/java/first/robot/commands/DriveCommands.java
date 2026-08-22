@@ -24,6 +24,7 @@ import org.wpilib.units.measure.Angle;
 import org.wpilib.command3.Command;
 
 import first.robot.Constants;
+import first.robot.Constants.CrystalColor;
 import first.robot.Constants.FieldConstants;
 import first.robot.Constants.SuperstructureStates;
 import first.robot.Constants.FieldConstants.BlueFieldConstants;
@@ -45,6 +46,7 @@ import java.util.function.Supplier;
 public class DriveCommands {
 
     private final Drive drive;
+    private final Supplier<Pose2d> drivePose;
 
     private static final double DEADBAND = 0.1;
     private static final double ANGLE_KP = 7.0;
@@ -65,6 +67,7 @@ public class DriveCommands {
 
     public DriveCommands(Drive drive) {
         this.drive = drive;
+        drivePose = () -> this.drive.getPose();
     }
 
     private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
@@ -175,8 +178,11 @@ public class DriveCommands {
         }).named("JOYSTICK DRIVE AT ANGLE " + Math.round(rotationSupplier.get().getDegrees() * 100.0) / 100.0 + "°");
     }
 
-    public Command goToPose(Pose2d pose) {
+    public Command goToPose(Supplier<Pose2d> pose) {
         return drive.run(co -> {
+
+            Pose2d goal = pose.get();
+
             // Create PID controller
             ProfiledPIDController angleController =
                 new ProfiledPIDController(
@@ -188,7 +194,7 @@ public class DriveCommands {
             angleController.setTolerance(Units.degreesToRadians(5.));
 
             // Reset PID controller when command starts
-            angleController.reset(drive.getRotation().getRadians());
+            angleController.reset(drivePose.get().getRotation().getRadians());
 
             ProfiledPIDController driveController =
                 new ProfiledPIDController(
@@ -197,7 +203,7 @@ public class DriveCommands {
                     DRIVE_kD,
                     new TrapezoidProfile.Constraints(DRIVE_MAX_VELOCITY, DRIVE_MAX_ACCELERATION));
             
-            driveController.reset(pose.getTranslation().minus(drive.getPose().getTranslation()).getNorm()); // "current position"
+            driveController.reset(goal.getTranslation().minus(drivePose.get().getTranslation()).getNorm()); // "current position"
             // we set the position this way because the goal (pose) is thus (0, 0): that way, the drive pose IS the error
             driveController.setTolerance(Units.inchesToMeters(5));
 
@@ -205,23 +211,23 @@ public class DriveCommands {
                 double omega = 
                     angleController.calculate(
                         drive.getRotation().getRadians(),
-                        pose.getRotation().getRadians());
+                        goal.getRotation().getRadians());
                 
                 double throttle = 
                     driveController.calculate(
-                        pose.minus(drive.getPose()).getTranslation().getNorm(),
-                        pose.getTranslation().getNorm());
+                        goal.minus(drivePose.get()).getTranslation().getNorm(),
+                        goal.getTranslation().getNorm());
                 
                 Translation2d velocity = new Translation2d(
                     throttle,
-                    pose.minus(drive.getPose()).getRotation());
+                    goal.minus(drivePose.get()).getRotation());
 
                 drive.runVelocity(new ChassisVelocities(velocity.getX(), velocity.getY(), omega));
 
                 co.yield();
             }
 
-        }).named(String.format("GO TO (%.2f, %.2f) AT %.2f°", pose.getX(), pose.getY(), pose.getRotation().getDegrees()));
+        }).named(String.format("GO TO (%.2f, %.2f) AT %.2f°", pose.get().getX(), pose.get().getY(), pose.get().getRotation().getDegrees()));
     }
 
     public Command shuttleAlign() {
@@ -265,52 +271,33 @@ public class DriveCommands {
             boolean isRed = DriverStationBackend.getAlliance().orElse(Alliance.RED) == Alliance.RED;
 
             Pose2d closestPose = drive.getPose().nearest(Arrays.asList(
-                isRed
-                ? (isL1 ? RedFieldConstants.LOWER_SHAFTS : RedFieldConstants.UPPER_SHAFTS)
-                : (isL1 ? BlueFieldConstants.LOWER_SHAFTS : BlueFieldConstants.UPPER_SHAFTS)
+                isRed ?
+                  isL1 ? RedFieldConstants.LOWER_SHAFTS : RedFieldConstants.UPPER_SHAFTS
+                : isL1 ? BlueFieldConstants.LOWER_SHAFTS : BlueFieldConstants.UPPER_SHAFTS
             )).plus(isL1 ? FieldConstants.LSHAFT_WALL_DISTANCE : FieldConstants.USHAFT_WALL_DISTANCE)
             ;
-            co.await(goToPose(closestPose));
+            co.await(goToPose(() -> closestPose));
         }).named("NEUTAL ALIGN");
     }
 
-    public Command coloredAlign(Supplier<SuperstructureStates> state, Supplier<String> crystalColor) {
+    public Command coloredAlign(Supplier<SuperstructureStates> state, Supplier<CrystalColor> crystalColor) {
         return drive.run(co -> {
             boolean isL1 = state.get() == SuperstructureStates.L1_BACK || state.get() == SuperstructureStates.L1_FRONT;
             boolean isRed = DriverStationBackend.getAlliance().orElse(Alliance.RED) == Alliance.RED;
 
-            Pose2d[] validBranches = new Pose2d[0];
-            if (isL1) {
-                switch (crystalColor.get()) {
-                    case "GREEN":
-                        break;
-                    case "YELLOW":
-                        break;
-                    case "ORANGE":
-                        break;
-                    case "PURPLE":
-                        break;
-                    default: // BLACK
-                        validBranches = (isRed ? RedFieldConstants.LOWER_SHAFTS : BlueFieldConstants.LOWER_SHAFTS);
-                        break;
-                }
-            } else {
-                switch (crystalColor.get()) {
-                    case "GREEN":
-                        break;
-                    case "YELLOW":
-                        break;
-                    case "ORANGE":
-                        break;
-                    case "PURPLE":
-                        break;
-                    default: // BLACK
-                        validBranches = (isRed ? RedFieldConstants.LOWER_SHAFTS : BlueFieldConstants.LOWER_SHAFTS);
-                        break;
-                }
-            }
-            Pose2d closestPose = drive.getPose().nearest(Arrays.asList(validBranches));
-            co.await(goToPose(closestPose));
+            Pose2d[] shaftList = isRed ?
+                  isL1 ? RedFieldConstants.LOWER_SHAFTS : RedFieldConstants.UPPER_SHAFTS
+                : isL1 ? BlueFieldConstants.LOWER_SHAFTS : BlueFieldConstants.UPPER_SHAFTS
+            ;
+
+            Pose2d[] validShafts = crystalColor.get()!=CrystalColor.NONE ?
+                  FieldConstants.getValidShaft(isL1, shaftList, crystalColor.get())
+                : shaftList
+            ;
+
+            Pose2d closestPose = drive.getPose().nearest(Arrays.asList(validShafts))
+                .plus(isL1 ? FieldConstants.LSHAFT_WALL_DISTANCE : FieldConstants.USHAFT_WALL_DISTANCE);
+            co.await(goToPose(() -> closestPose));
         }).named("");
     }
 
